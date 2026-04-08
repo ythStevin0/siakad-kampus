@@ -1,0 +1,21 @@
+# Environment files
+.env
+*.env
+
+# Go
+backend/vendor/
+backend/*.exe
+backend/*.test
+
+# Node / Remix
+frontend/node_modules/
+frontend/.cache/
+frontend/build/
+frontend/public/build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
