@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: siakad_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres 
+      POSTGRES_PASSWORD: password 
+      POSTGRES_DB: siakad_db 
+    ports:
+      - "5432:5432"
+    volumes:
+      - siakad_pgdata:/var/lib/postgresql/data
+
+volumes:
+  siakad_pgdata: 
