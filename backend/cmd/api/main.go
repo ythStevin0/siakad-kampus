@@ -10,43 +10,53 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
+
+	"siakad/backend/pkg/database"
 )
 
 func main() {
-	// 1. Load file .env
-	// godotenv membaca C:\siakad\backend\.env
-	// dan menyuntikkan semua variabel ke environment
+	// 1. Load .env
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// 2. Inisialisasi logger zap
-	// zap.NewDevelopment() = format log yang mudah dibaca di terminal
+	// 2. Inisialisasi logger
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatal("Error initializing logger")
 	}
 	defer logger.Sync()
 
-	// 3. Inisialisasi router chi
-	r := chi.NewRouter()
+	// 3. Koneksi ke database
+	db, err := database.NewPool(logger)
+	if err != nil {
+		logger.Fatal("Failed to connect to database", zap.Error(err))
+	}
+	defer db.Close()
 
-	// Middleware bawaan chi:
-	// - Logger   : mencatat setiap request masuk
-	// - Recoverer: mencegah server crash jika ada panic
+	// 4. Inisialisasi router
+	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// 4. Endpoint pertama: health check
-	// Digunakan untuk memverifikasi server berjalan normal
+	// 5. Health check — sekarang juga cek koneksi database
 	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
-		logger.Info("Health check called")
+		// Ping database saat health check dipanggil
+		if err := db.Ping(r.Context()); err != nil {
+			logger.Error("Database ping failed", zap.Error(err))
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			fmt.Fprintln(w, `{"status":"error","message":"database unreachable"}`)
+			return
+		}
+
+		logger.Info("Health check OK")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, `{"status":"ok","message":"SIAKAD API is running"}`)
+		fmt.Fprintln(w, `{"status":"ok","message":"SIAKAD API is running","database":"connected"}`)
 	})
 
-	// 5. Jalankan server
+	// 6. Jalankan server
 	port := os.Getenv("APP_PORT")
 	logger.Info("Server starting", zap.String("port", port))
 
