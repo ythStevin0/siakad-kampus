@@ -1,0 +1,19 @@
+/* Import semua utility class Tailwind */
+@import "tailwindcss";
+
+/* Custom CSS variable untuk tema Dark Premium */
+:root {
+  --color-primary: #a78bfa;   /* ungu terang untuk aksen */
+  --color-surface: #18181b;   /* zinc-900 untuk card/panel */
+  --color-border: #27272a;    /* zinc-800 untuk garis batas */
+}
+
+/* Paksa semua halaman pakai dark background */
+body {
+  @apply bg-zinc-950 text-zinc-100 antialiased;
+}
+
+/* Scrollbar custom agar sesuai tema gelap */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { @apply bg-zinc-950; }
+::-webkit-scrollbar-thumb { @apply bg-zinc-700 rounded-full; }
