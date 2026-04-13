@@ -13,10 +13,10 @@ import (
 // NewPool membuat connection pool ke PostgreSQL
 // Menggunakan pgxpool agar koneksi bisa dipakai ulang
 // oleh banyak request secara bersamaan
-func NewPool(logger *zap.Logger) (*pgxpool.Pool, error) {
+func NewPool(logger *zap.Logger) (*pgxpool.Pool, error) { //
 	// Ambil konfigurasi dari .env via godotenv
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	dsn := fmt.Sprintf( 
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_USER"),
