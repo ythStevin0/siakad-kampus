@@ -1,17 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 
+	"siakad/backend/internal/handler"
+	"siakad/backend/internal/middleware"
+	"siakad/backend/internal/model"
+	"siakad/backend/internal/repository"
+	"siakad/backend/internal/service"
 	"siakad/backend/pkg/database"
+	"siakad/backend/pkg/response"
 )
 
 func main() {
@@ -20,43 +25,61 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	// 2. Inisialisasi logger
+	// 2. Init logger
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatal("Error initializing logger")
 	}
 	defer logger.Sync()
 
-	// 3. Koneksi ke database
+	// 3. Koneksi database
 	db, err := database.NewPool(logger)
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
 	defer db.Close()
 
-	// 4. Inisialisasi router
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	// 4. Init semua layer (repository → service → handler)
+	// Urutan ini penting — setiap layer butuh layer di bawahnya
+	authRepo := repository.NewAuthRepository(db)
+	authService := service.NewAuthService(authRepo, os.Getenv("JWT_SECRET"))
+	authHandler := handler.NewAuthHandler(authService, logger)
 
-	// 5. Health check — sekarang juga cek koneksi database
+	// 5. Init router
+	r := chi.NewRouter()
+	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.Recoverer)
+
+	// 6. Health check — public, tidak butuh auth
 	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
-		// Ping database saat health check dipanggil
 		if err := db.Ping(r.Context()); err != nil {
-			logger.Error("Database ping failed", zap.Error(err))
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusServiceUnavailable)
-			fmt.Fprintln(w, `{"status":"error","message":"database unreachable"}`)
+			response.Error(w, http.StatusServiceUnavailable, "Database unreachable", err.Error())
 			return
 		}
-
-		logger.Info("Health check OK")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, `{"status":"ok","message":"SIAKAD API is running","database":"connected"}`)
+		response.Success(w, http.StatusOK, "SIAKAD API is running", map[string]string{
+			"database": "connected",
+		})
 	})
 
-	// 6. Jalankan server
+	// 7. Route auth — public, tidak butuh token
+	r.Route("/api/auth", func(r chi.Router) {
+		r.Post("/login", authHandler.Login)
+		r.Post("/refresh", authHandler.Refresh)
+		r.Post("/logout", authHandler.Logout)
+	})
+
+	// 8. Contoh route terproteksi — butuh token + role tertentu
+	// Ini akan kita isi lebih banyak di fase berikutnya
+	r.Route("/api/admin", func(r chi.Router) {
+		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+		r.Use(middleware.RequireRole(model.RoleAdmin))
+		r.Get("/dashboard", func(w http.ResponseWriter, r *http.Request) {
+			user := middleware.GetUserFromContext(r.Context())
+			response.Success(w, http.StatusOK, "Welcome admin", user)
+		})
+	})
+
+	// 9. Jalankan server
 	port := os.Getenv("APP_PORT")
 	logger.Info("Server starting", zap.String("port", port))
 
