@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"go.uber.org/zap"
 	"siakad/backend/internal/service"
@@ -24,6 +25,18 @@ func NewAuthHandler(service *service.AuthService, logger *zap.Logger) *AuthHandl
 	}
 }
 
+func buildRefreshTokenCookie(token string, maxAge int) *http.Cookie {
+	return &http.Cookie{
+		Name:     "refresh_token",
+		Value:    token,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   os.Getenv("APP_ENV") == "production",
+		Path:     "/api/auth",
+		MaxAge:   maxAge,
+	}
+}
+
 // Login menangani POST /api/auth/login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// 1. Decode request body ke struct LoginRequest
@@ -42,15 +55,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Simpan refresh token di httpOnly cookie
-	// httpOnly = tidak bisa diakses JavaScript (aman dari XSS)
-	// Secure = hanya dikirim lewat HTTPS di production
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshToken,
-		HttpOnly: true,
-		Path:     "/api/auth/refresh",
-		MaxAge:   7 * 24 * 60 * 60, // 7 hari dalam detik
-	})
+	// Path /api/auth membuat cookie ikut terkirim ke refresh dan logout
+	http.SetCookie(w, buildRefreshTokenCookie(refreshToken, 7*24*60*60))
 
 	h.logger.Info("Login success", zap.String("email", req.Email))
 	response.Success(w, http.StatusOK, "Login berhasil", result)
@@ -67,12 +73,14 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Panggil service untuk generate access token baru
-	accessToken, err := h.service.RefreshAccessToken(r.Context(), cookie.Value)
+	accessToken, newRefreshToken, err := h.service.RefreshAccessToken(r.Context(), cookie.Value)
 	if err != nil {
 		h.logger.Warn("Refresh token failed", zap.Error(err))
 		response.Error(w, http.StatusUnauthorized, "Refresh token tidak valid", err.Error())
 		return
 	}
+
+	http.SetCookie(w, buildRefreshTokenCookie(newRefreshToken, 7*24*60*60))
 
 	response.Success(w, http.StatusOK, "Token diperbarui", map[string]string{
 		"access_token": accessToken,
@@ -96,13 +104,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Hapus cookie di browser
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		HttpOnly: true,
-		Path:     "/api/auth/refresh",
-		MaxAge:   -1, // MaxAge -1 = hapus cookie
-	})
+	http.SetCookie(w, buildRefreshTokenCookie("", -1))
 
 	h.logger.Info("Logout success")
 	response.Success(w, http.StatusOK, "Logout berhasil", nil)

@@ -29,9 +29,9 @@ var domainByRole = map[model.UserRole]string{
 // Claims adalah isi payload JWT kita
 // Berisi informasi user yang disimpan di dalam token
 type Claims struct {
-	UserID string          `json:"user_id"`
-	Email  string          `json:"email"`
-	Role   model.UserRole  `json:"role"`
+	UserID string         `json:"user_id"`
+	Email  string         `json:"email"`
+	Role   model.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -75,9 +75,9 @@ type LoginRequest struct {
 
 // LoginResponse adalah data yang dikembalikan setelah login berhasil
 type LoginResponse struct {
-	AccessToken  string         `json:"access_token"`
-	Role         model.UserRole `json:"role"`
-	Email        string         `json:"email"`
+	AccessToken string         `json:"access_token"`
+	Role        model.UserRole `json:"role"`
+	Email       string         `json:"email"`
 }
 
 // Login memvalidasi kredensial dan menghasilkan token
@@ -177,27 +177,68 @@ func (s *AuthService) generateRefreshToken(ctx context.Context, user *model.User
 	return tokenString, nil
 }
 
+func (s *AuthService) parseRefreshToken(refreshToken string) (*jwt.RegisteredClaims, error) {
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(s.jwtSecret), nil
+	})
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("refresh token tidak valid")
+	}
+
+	return claims, nil
+}
+
 // RefreshAccessToken menukar refresh token dengan access token baru
-func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken string) (string, error) {
+// sekaligus melakukan rotasi refresh token agar token lama tidak bisa dipakai lagi
+func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken string) (string, string, error) {
 	// 1. Cari refresh token di database
 	rt, err := s.repo.FindRefreshToken(ctx, refreshToken)
 	if err != nil {
-		return "", fmt.Errorf("refresh token tidak valid")
+		return "", "", fmt.Errorf("refresh token tidak valid")
 	}
 
-	// 2. Cek apakah token sudah expired
+	// 2. Validasi signature dan claims JWT refresh token
+	claims, err := s.parseRefreshToken(refreshToken)
+	if err != nil {
+		return "", "", err
+	}
+
+	// 3. Cek apakah token sudah expired
 	if time.Now().After(rt.ExpiresAt) {
-		return "", fmt.Errorf("refresh token sudah expired")
+		return "", "", fmt.Errorf("refresh token sudah expired")
 	}
 
-	// 3. Ambil data user
+	if claims.Subject != rt.UserID {
+		return "", "", fmt.Errorf("refresh token tidak cocok dengan user")
+	}
+
+	// 4. Ambil data user
 	user, err := s.repo.FindUserByID(ctx, rt.UserID)
 	if err != nil {
-		return "", fmt.Errorf("user tidak ditemukan")
+		return "", "", fmt.Errorf("user tidak ditemukan")
 	}
 
-	// 4. Generate access token baru
-	return s.generateAccessToken(user)
+	// 5. Revoke refresh token lama agar tidak bisa dipakai ulang
+	if err := s.repo.RevokeRefreshToken(ctx, refreshToken); err != nil {
+		return "", "", fmt.Errorf("gagal mencabut refresh token lama")
+	}
+
+	// 6. Generate pasangan token baru
+	accessToken, err := s.generateAccessToken(user)
+	if err != nil {
+		return "", "", fmt.Errorf("gagal membuat access token")
+	}
+
+	newRefreshToken, err := s.generateRefreshToken(ctx, user)
+	if err != nil {
+		return "", "", fmt.Errorf("gagal membuat refresh token baru")
+	}
+
+	return accessToken, newRefreshToken, nil
 }
 
 // Logout mencabut refresh token agar tidak bisa dipakai lagi
