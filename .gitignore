@@ -6,6 +6,7 @@
 backend/vendor/
 backend/*.exe
 backend/*.test
+.gocache/
 
 # Node / Remix
 frontend/node_modules/
