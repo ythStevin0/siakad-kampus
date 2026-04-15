@@ -1,39 +1,44 @@
-// React Router v7 — semua import dari "react-router"
 import { useLoaderData } from "react-router";
 import type { Route } from "./+types/home";
 
-type HealthResponse = {
-  status: string;
+// Sesuaikan dengan format wrapper pkg/response Go
+type ApiResponse = {
+  success: boolean;
   message: string;
-  database: string;
+  data: {
+    database: string;
+  } | null;
+  error?: string;
 };
 
-// loader tetap sama konsepnya — berjalan di server
-// sebelum halaman di-render ke browser
 export async function loader({ request }: Route.LoaderArgs) {
   try {
-    const response = await fetch("http://localhost:8080/api/health")
+    const response = await fetch("http://localhost:8080/api/health");
+    const json: ApiResponse = await response.json();
 
-    if (!response.ok) {
-      throw new Error("API tidak merespons");
-    }
-
-    const data: HealthResponse = await response.json();
-    return { health: data, error: null };
-
+    return {
+      success: json.success,
+      message: json.message,
+      database: json.data?.database ?? null,
+      error: json.error ?? null,
+    };
   } catch (error) {
-    return { health: null, error: "Gagal terhubung ke API" };
+    return {
+      success: false,
+      message: "Gagal terhubung ke API",
+      database: null,
+      error: "Server tidak merespons",
+    };
   }
 }
 
-export default function Index() {
-  const { health, error } = useLoaderData<typeof loader>();
+export default function Home() {
+  const { success, message, database, error } = useLoaderData<typeof loader>();
 
   return (
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
 
-        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-zinc-100 tracking-tight">
             SIAKAD
@@ -43,37 +48,36 @@ export default function Index() {
           </p>
         </div>
 
-        {/* Card status */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <p className="text-xs text-zinc-500 uppercase tracking-widest mb-4">
             Status Sistem
           </p>
 
-          {error && (
+          {!success && (
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-red-500" />
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          {health && (
+          {success && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-zinc-400 text-sm">API Server</span>
                 <span className="flex items-center gap-2 text-sm">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-emerald-400">{health.status}</span>
+                  <span className="text-emerald-400">online</span>
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-zinc-400 text-sm">Database</span>
                 <span className="flex items-center gap-2 text-sm">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-emerald-400">{health.database}</span>
+                  <span className="text-emerald-400">{database}</span>
                 </span>
               </div>
               <div className="pt-3 border-t border-zinc-800">
-                <p className="text-zinc-500 text-xs">{health.message}</p>
+                <p className="text-zinc-500 text-xs">{message}</p>
               </div>
             </div>
           )}
