@@ -1,10 +1,17 @@
 import {
+  redirect,
   data,
   useActionData,
   useNavigation,
   type ActionFunctionArgs,
+  type LoaderFunctionArgs,
 } from "react-router";
 import { LoginForm } from "../components/auth/login-form";
+import {
+  commitAuthSession,
+  getAuthSession,
+  setAuthSessionData,
+} from "../lib/auth-session.server";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8080";
 
@@ -20,6 +27,7 @@ type LoginApiResponse = {
 };
 
 export async function action({ request }: ActionFunctionArgs) {
+  const session = await getAuthSession(request);
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "").trim();
@@ -66,6 +74,13 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
+    setAuthSessionData(session, result.data.access_token, {
+      email: result.data.email,
+      role: result.data.role,
+    });
+
+    headers.append("Set-Cookie", await commitAuthSession(session));
+
     return data(
       {
         success: true,
@@ -91,6 +106,17 @@ export async function action({ request }: ActionFunctionArgs) {
       { status: 502 },
     );
   }
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const session = await getAuthSession(request);
+  const user = session.get("user");
+
+  if (user) {
+    throw redirect("/");
+  }
+
+  return null;
 }
 
 export default function Login() {

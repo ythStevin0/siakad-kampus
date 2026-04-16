@@ -134,9 +134,9 @@ export function LoginForm({ actionData, isSubmitting }: LoginFormProps) {
                     role {actionData.user.role}.
                   </p>
                   <p className="mt-3 text-xs text-emerald-200/80">
-                    Access token sudah diterima oleh frontend. Di langkah
-                    berikutnya kita akan menentukan penyimpanan token dan
-                    redirect sesuai role.
+                    Session frontend sekarang sudah tersimpan di cookie
+                    httpOnly. Di langkah berikutnya kita akan memakai session
+                    ini untuk proteksi route dan alur role-based access.
                   </p>
                 </div>
               )}
