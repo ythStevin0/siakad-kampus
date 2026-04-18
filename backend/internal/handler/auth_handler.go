@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"os"
 
-	"go.uber.org/zap"
 	"siakad/backend/internal/service"
 	"siakad/backend/pkg/response"
+
+	"go.uber.org/zap"
 )
 
 // AuthHandler menerima HTTP request yang berkaitan

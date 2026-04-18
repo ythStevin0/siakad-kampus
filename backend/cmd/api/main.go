@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 
@@ -47,6 +48,17 @@ func main() {
 
 	// 5. Init router
 	r := chi.NewRouter()
+
+	// 5.1 Set up CORS
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"}, // Port URL development frontend
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 
