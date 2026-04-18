@@ -17,9 +17,22 @@ export default function Login() {
 
     try {
       const res = await login(email, password);
-      // Jika berhasil, arahkan ke halaman utama (home)
+      // Jika berhasil, simpan info user & arahkan ke halaman yang sesuai role-nya
       if (res.success) {
-        navigate("/");
+        // Simpan data user di localStorage untuk digunakan di setiap layout
+        localStorage.setItem("siakad_user", JSON.stringify({
+          email: res.data.email,
+          role: res.data.role,
+          name: res.data.email.split("@")[0].replace(/\./g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        }));
+
+        // Admin masuk ke panel terpisah (/admin)
+        // Mahasiswa & Dosen masuk ke portal gapura (/dashboard)
+        if (res.data.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (err: any) {
       setError(err.message || "Gagal melakukan login. Periksa email dan password.");
