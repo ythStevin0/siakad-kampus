@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { logout, getAccessToken } from "../lib/auth";
 
 // Tipe untuk data user dari JWT (nanti akan diambil dari context/state)
@@ -14,7 +14,7 @@ function getUserFromStorage(): { email: string; role: string; name: string } | n
 }
 
 // Definisi menu berdasarkan role
-const menuByRole: Record<string, { label: string; to: string; icon: JSX.Element }[]> = {
+const menuByRole: Record<string, { label: string; to: string; icon: ReactNode }[]> = {
   mahasiswa: [
     {
       label: "Dashboard",
