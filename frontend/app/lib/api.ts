@@ -1,0 +1,96 @@
+// api.ts
+// Helper terpusat untuk semua request ke backend API
+// Menggunakan access token dari auth.ts secara otomatis
+
+import { getAccessToken } from "./auth";
+
+const BASE_URL = "http://localhost:8080";
+
+// Helper dasar — otomatis sisipkan Authorization header
+async function apiFetch(path: string, options?: RequestInit) {
+  const token = getAccessToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    credentials: "omit",
+    headers,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || data.message || "Terjadi kesalahan");
+  }
+  return data;
+}
+
+// =============================================
+// ADMIN STATS
+// =============================================
+export interface AdminStats {
+  total_mahasiswa: number;
+  total_dosen: number;
+  total_matkul: number;
+}
+
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const res = await apiFetch("/api/admin/stats");
+  return res.data as AdminStats;
+}
+
+// =============================================
+// PENCARIAN USER
+// =============================================
+export interface SearchResult {
+  tipe: "mahasiswa" | "dosen";
+  nama_lengkap: string;
+  identifier: string; // NIM atau NIDN
+  email: string;
+  detail: string;     // Prodi atau Departemen
+}
+
+export async function searchUsers(q: string): Promise<SearchResult[]> {
+  const res = await apiFetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+  return res.data as SearchResult[];
+}
+
+// =============================================
+// DATA DOSEN (untuk Cari User / halaman dosen)
+// =============================================
+export interface Dosen {
+  id: string;
+  nidn: string;
+  nama_lengkap: string;
+  gelar_depan: string | null;
+  gelar_belakang: string | null;
+  departemen: string;
+  email?: string;
+}
+
+export async function fetchAllDosen(): Promise<Dosen[]> {
+  const res = await apiFetch("/api/users/dosen");
+  return (res.data as Dosen[]) || [];
+}
+
+// =============================================
+// DATA MAHASISWA (untuk Admin - Kelola Mahasiswa)
+// =============================================
+export interface Mahasiswa {
+  id: string;
+  nim: string;
+  nama_lengkap: string;
+  program_studi: string;
+  angkatan: number;
+  jalur_masuk: string | null;
+}
+
+export async function fetchAllMahasiswa(): Promise<Mahasiswa[]> {
+  const res = await apiFetch("/api/admin/mahasiswa");
+  return (res.data as Mahasiswa[]) || [];
+}
