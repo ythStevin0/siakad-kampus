@@ -46,6 +46,10 @@ func main() {
 	authService := service.NewAuthService(authRepo, os.Getenv("JWT_SECRET"))
 	authHandler := handler.NewAuthHandler(authService, logger)
 
+	// Layer Akademik (Phase 6)
+	academicRepo := repository.NewAcademicRepository(db)
+	academicHandler := handler.NewAcademicHandler(academicRepo, logger)
+
 	// 5. Init router
 	r := chi.NewRouter()
 
@@ -80,15 +84,26 @@ func main() {
 		r.Post("/logout", authHandler.Logout)
 	})
 
-	// 8. Contoh route terproteksi — butuh token + role tertentu
-	// Ini akan kita isi lebih banyak di fase berikutnya
+	// 8. Route terproteksi untuk User (semua role bisa akses)
+	r.Route("/api/users", func(r chi.Router) {
+		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+		// Pencarian user (NIM/NIDN/Nama/Email) — semua role bisa
+		r.Get("/search", academicHandler.SearchUsers)
+		// Daftar dosen untuk ditampilkan di halaman Cari User
+		r.Get("/dosen", academicHandler.GetAllDosen)
+	})
+
+	// 9. Route terproteksi khusus Admin
 	r.Route("/api/admin", func(r chi.Router) {
 		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
 		r.Use(middleware.RequireRole(model.RoleAdmin))
-		r.Get("/dashboard", func(w http.ResponseWriter, r *http.Request) {
-			user := middleware.GetUserFromContext(r.Context())
-			response.Success(w, http.StatusOK, "Welcome admin", user)
-		})
+		// Statistik untuk Dashboard Admin
+		r.Get("/stats", academicHandler.GetAdminStats)
+		// Kelola Mahasiswa
+		r.Get("/mahasiswa", academicHandler.GetAllMahasiswa)
+		r.Post("/mahasiswa", academicHandler.CreateMahasiswa)
+		// Kelola Dosen
+		r.Post("/dosen", academicHandler.CreateDosen)
 	})
 
 	// 9. Jalankan server
