@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
+	
+	"siakad/backend/internal/model"
 	"siakad/backend/internal/repository"
 	"siakad/backend/pkg/response"
 )
@@ -79,9 +82,56 @@ func (h *AcademicHandler) GetAllMahasiswa(w http.ResponseWriter, r *http.Request
 
 // CreateMahasiswa — POST /api/admin/mahasiswa
 func (h *AcademicHandler) CreateMahasiswa(w http.ResponseWriter, r *http.Request) {
-	// Placeholder — akan diimplementasikan di Phase berikutnya
-	_, _ = json.Marshal(nil)
-	response.Success(w, http.StatusCreated, "Fitur ini akan segera hadir", nil)
+	var req struct {
+		NIM          string  `json:"nim"`
+		NamaLengkap  string  `json:"nama_lengkap"`
+		ProgramStudi string  `json:"program_studi"`
+		Angkatan     int     `json:"angkatan"`
+		JalurMasuk   *string `json:"jalur_masuk"`
+		Password     string  `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "Format request tidak valid", err.Error())
+		return
+	}
+
+	// Validasi minimal
+	if len(req.Password) < 6 {
+		response.Error(w, http.StatusBadRequest, "Password terlalu pendek", "Minimal 6 karakter")
+		return
+	}
+	if req.NIM == "" || req.NamaLengkap == "" || req.ProgramStudi == "" || req.Angkatan == 0 {
+		response.Error(w, http.StatusBadRequest, "Data tidak lengkap", "Pastikan NIM, Nama, Prodi, dan Angkatan terisi")
+		return
+	}
+
+	// Hash password
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		h.logger.Error("Failed to hash password", zap.Error(err))
+		response.Error(w, http.StatusInternalServerError, "Gagal mengamankan password", err.Error())
+		return
+	}
+
+	// Persiapkan entitas Mahasiswa
+	m := model.Mahasiswa{
+		NIM:          req.NIM,
+		NamaLengkap:  req.NamaLengkap,
+		ProgramStudi: req.ProgramStudi,
+		Angkatan:     req.Angkatan,
+		JalurMasuk:   req.JalurMasuk,
+	}
+
+	// Panggil layer aksi transaksional (memasukkan ke `users` lalu `mahasiswa`)
+	err = h.academicRepo.CreateMahasiswaTx(r.Context(), &m, string(hashed))
+	if err != nil {
+		h.logger.Error("Failed to insert mahasiswa", zap.Error(err))
+		response.Error(w, http.StatusInternalServerError, "Gagal menambahkan mahasiswa", "Periksa kembali (NIM mungkin sudah terdaftar)")
+		return
+	}
+
+	response.Success(w, http.StatusCreated, "Mahasiswa berhasil didaftarkan", m)
 }
 
 // CreateDosen — POST /api/admin/dosen

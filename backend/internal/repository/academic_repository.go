@@ -171,3 +171,50 @@ func (r *AcademicRepository) GetAllDosen(ctx context.Context) ([]model.Dosen, er
 	}
 	return list, nil
 }
+
+// CreateMahasiswaTx membuat user dan profil mahasiswa secara transaksional
+// Menjamin ACID: Jika gagal insert ke tabel mahasiswa, insert user akan di-rollback.
+func (r *AcademicRepository) CreateMahasiswaTx(ctx context.Context, m *model.Mahasiswa, hashedPassword string) error {
+	// 1. Mulai Transaksi
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	// Defer rollback (jika Commit berhasil, rollback tidak akan berefek)
+	defer tx.Rollback(ctx)
+
+	// 2. Insert ke tabel users dan ambil ID-nya
+	// Asumsi email: [nim]@mahasiswa.uisi.ac.id
+	email := fmt.Sprintf("%s@mahasiswa.uisi.ac.id", m.NIM)
+	userQuery := `
+		INSERT INTO users (email, password, role, is_active)
+		VALUES ($1, $2, 'mahasiswa', true)
+		RETURNING id
+	`
+	err = tx.QueryRow(ctx, userQuery, email, hashedPassword).Scan(&m.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to insert user: %w", err)
+	}
+
+	// 3. Insert ke tabel mahasiswa menggunakan user_id yang baru dibuat
+	mahasiswaQuery := `
+		INSERT INTO mahasiswa (user_id, nim, nama_lengkap, program_studi, angkatan, jalur_masuk)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, created_at, updated_at
+	`
+	err = tx.QueryRow(ctx, mahasiswaQuery, 
+		m.UserID, m.NIM, m.NamaLengkap, m.ProgramStudi, m.Angkatan, m.JalurMasuk,
+	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt)
+	
+	if err != nil {
+		// Pemicu utama kegagalan disini biasanya karena NIM sudah terdaftar (Unique Constraint)
+		return fmt.Errorf("failed to insert mahasiswa profile: %w", err)
+	}
+
+	// 4. Commit Transaksi
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}

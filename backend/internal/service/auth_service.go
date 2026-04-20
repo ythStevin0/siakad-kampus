@@ -21,7 +21,7 @@ const (
 // domainByRole mendefinisikan domain email
 // yang diizinkan untuk setiap role
 var domainByRole = map[model.UserRole]string{
-	model.RoleMahasiswa: "@student.uisi.ac.id",
+	model.RoleMahasiswa: "@mahasiswa.uisi.ac.id",
 	model.RoleDosen:     "@dosen.uisi.ac.id",
 	model.RoleAdmin:     "@admin.uisi.ac.id",
 }
