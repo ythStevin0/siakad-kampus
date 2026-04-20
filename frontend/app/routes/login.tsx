@@ -76,7 +76,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@student.uisi.ac.id"
+                placeholder="email@mahasiswa.uisi.ac.id"
                 className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-zinc-600 transition-all text-zinc-100 placeholder:text-zinc-700"
                 required
               />

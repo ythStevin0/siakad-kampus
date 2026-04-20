@@ -94,3 +94,11 @@ export async function fetchAllMahasiswa(): Promise<Mahasiswa[]> {
   const res = await apiFetch("/api/admin/mahasiswa");
   return (res.data as Mahasiswa[]) || [];
 }
+
+export async function createMahasiswa(payload: Record<string, any>) {
+  const res = await apiFetch("/api/admin/mahasiswa", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
