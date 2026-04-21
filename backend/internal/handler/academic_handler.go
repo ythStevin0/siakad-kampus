@@ -123,6 +123,83 @@ func (h *AcademicHandler) CreateMahasiswa(w http.ResponseWriter, r *http.Request
 
 // CreateDosen — POST /api/admin/dosen
 func (h *AcademicHandler) CreateDosen(w http.ResponseWriter, r *http.Request) {
-	// Placeholder — akan diimplementasikan di Phase berikutnya
-	response.Success(w, http.StatusCreated, "Fitur ini akan segera hadir", nil)
+	var req struct {
+		NIDN          string  `json:"nidn"`
+		NamaLengkap   string  `json:"nama_lengkap"`
+		GelarDepan    *string `json:"gelar_depan"`
+		GelarBelakang *string `json:"gelar_belakang"`
+		Departemen    string  `json:"departemen"`
+		Password      string  `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "Format request tidak valid", err.Error())
+		return
+	}
+
+	if len(req.Password) < 6 {
+		response.Error(w, http.StatusBadRequest, "Password terlalu pendek", "Minimal 6 karakter")
+		return
+	}
+
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+
+	d := model.Dosen{
+		NIDN:          req.NIDN,
+		NamaLengkap:   req.NamaLengkap,
+		GelarDepan:    req.GelarDepan,
+		GelarBelakang: req.GelarBelakang,
+		Departemen:    req.Departemen,
+	}
+
+	err := h.academicService.CreateDosen(r.Context(), &d, string(hashed))
+	if err != nil {
+		h.logger.Error("Failed to create dosen", zap.Error(err))
+		response.Error(w, http.StatusInternalServerError, "Gagal mendaftarkan dosen", err.Error())
+		return
+	}
+
+	response.Success(w, http.StatusCreated, "Dosen berhasil didaftarkan", d)
+}
+
+// CreateMataKuliah — POST /api/admin/mata-kuliah
+func (h *AcademicHandler) CreateMataKuliah(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		KodeMK   string `json:"kode_mk"`
+		NamaMK   string `json:"nama_mk"`
+		SKS      int    `json:"sks"`
+		Semester int    `json:"semester"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "Format request tidak valid", err.Error())
+		return
+	}
+
+	mk := model.MataKuliah{
+		KodeMK:   req.KodeMK,
+		NamaMK:   req.NamaMK,
+		SKS:      req.SKS,
+		Semester: req.Semester,
+	}
+
+	err := h.academicService.CreateMataKuliah(r.Context(), &mk)
+	if err != nil {
+		h.logger.Error("Failed to create mata kuliah", zap.Error(err))
+		response.Error(w, http.StatusInternalServerError, "Gagal membuat mata kuliah", err.Error())
+		return
+	}
+
+	response.Success(w, http.StatusCreated, "Mata kuliah berhasil ditambahkan", mk)
+}
+
+// GetAllMataKuliah — GET /api/admin/mata-kuliah
+func (h *AcademicHandler) GetAllMataKuliah(w http.ResponseWriter, r *http.Request) {
+	list, err := h.academicService.GetAllMataKuliah(r.Context())
+	if err != nil {
+		h.logger.Error("Failed to get mata kuliah list", zap.Error(err))
+		response.Error(w, http.StatusInternalServerError, "Gagal mengambil data mata kuliah", err.Error())
+		return
+	}
+	response.Success(w, http.StatusOK, "Data mata kuliah berhasil diambil", list)
 }
