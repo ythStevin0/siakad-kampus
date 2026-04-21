@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"siakad/backend/internal/model"
 )
@@ -193,7 +196,7 @@ func (r *AcademicRepository) CreateMahasiswaTx(ctx context.Context, m *model.Mah
 	`
 	err = tx.QueryRow(ctx, userQuery, email, hashedPassword).Scan(&m.UserID)
 	if err != nil {
-		return fmt.Errorf("failed to insert user: %w", err)
+		return parsePgError(err)
 	}
 
 	// 3. Insert ke tabel mahasiswa menggunakan user_id yang baru dibuat
@@ -207,14 +210,35 @@ func (r *AcademicRepository) CreateMahasiswaTx(ctx context.Context, m *model.Mah
 	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt)
 	
 	if err != nil {
-		// Pemicu utama kegagalan disini biasanya karena NIM sudah terdaftar (Unique Constraint)
-		return fmt.Errorf("failed to insert mahasiswa profile: %w", err)
+		return parsePgError(err)
 	}
 
 	// 4. Commit Transaksi
 	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
+		return parsePgError(err)
 	}
 
 	return nil
+}
+
+// parsePgError menerjemahkan kode error PostgreSQL menjadi pesan yang bermakna
+func parsePgError(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505": // unique_violation
+			if strings.Contains(pgErr.ConstraintName, "nim") {
+				return fmt.Errorf("NIM sudah terdaftar di sistem")
+			}
+			if strings.Contains(pgErr.ConstraintName, "email") {
+				return fmt.Errorf("Email sudah terdaftar di sistem")
+			}
+			return fmt.Errorf("Data sudah terdaftar di sistem")
+		case "23503": // foreign_key_violation
+			return fmt.Errorf("Data referensi tidak ditemukan")
+		case "08006", "08001", "08004": // connection errors
+			return fmt.Errorf("Koneksi database terputus, coba beberapa saat lagi")
+		}
+	}
+	return err
 }

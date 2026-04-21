@@ -8,27 +8,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	
 	"siakad/backend/internal/model"
-	"siakad/backend/internal/repository"
+	"siakad/backend/internal/service"
 	"siakad/backend/pkg/response"
 )
 
 // AcademicHandler menangani request HTTP untuk fitur-fitur akademik
 type AcademicHandler struct {
-	academicRepo *repository.AcademicRepository
-	logger       *zap.Logger
+	academicService *service.AcademicService
+	logger          *zap.Logger
 }
 
-func NewAcademicHandler(academicRepo *repository.AcademicRepository, logger *zap.Logger) *AcademicHandler {
+func NewAcademicHandler(academicService *service.AcademicService, logger *zap.Logger) *AcademicHandler {
 	return &AcademicHandler{
-		academicRepo: academicRepo,
-		logger:       logger,
+		academicService: academicService,
+		logger:          logger,
 	}
 }
 
 // GetAdminStats — GET /api/admin/stats
-// Mengembalikan total mahasiswa, dosen, dan mata kuliah untuk Dashboard Admin
 func (h *AcademicHandler) GetAdminStats(w http.ResponseWriter, r *http.Request) {
-	stats, err := h.academicRepo.GetStats(r.Context())
+	stats, err := h.academicService.GetStats(r.Context())
 	if err != nil {
 		h.logger.Error("Failed to get admin stats", zap.Error(err))
 		response.Error(w, http.StatusInternalServerError, "Gagal mengambil statistik", err.Error())
@@ -38,7 +37,6 @@ func (h *AcademicHandler) GetAdminStats(w http.ResponseWriter, r *http.Request) 
 }
 
 // SearchUsers — GET /api/users/search?q=...
-// Mencari mahasiswa atau dosen berdasarkan kata kunci
 func (h *AcademicHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	if len(q) < 3 {
@@ -46,7 +44,7 @@ func (h *AcademicHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := h.academicRepo.SearchUsers(r.Context(), q)
+	results, err := h.academicService.SearchUsers(r.Context(), q)
 	if err != nil {
 		h.logger.Error("Search failed", zap.Error(err), zap.String("query", q))
 		response.Error(w, http.StatusInternalServerError, "Pencarian gagal", err.Error())
@@ -57,9 +55,8 @@ func (h *AcademicHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllDosen — GET /api/users/dosen
-// Mengambil semua dosen (untuk halaman Cari User / Kelola Dosen Admin)
 func (h *AcademicHandler) GetAllDosen(w http.ResponseWriter, r *http.Request) {
-	list, err := h.academicRepo.GetAllDosen(r.Context())
+	list, err := h.academicService.GetAllDosen(r.Context())
 	if err != nil {
 		h.logger.Error("Failed to get dosen list", zap.Error(err))
 		response.Error(w, http.StatusInternalServerError, "Gagal mengambil data dosen", err.Error())
@@ -69,9 +66,8 @@ func (h *AcademicHandler) GetAllDosen(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllMahasiswa — GET /api/admin/mahasiswa
-// Mengambil semua mahasiswa (untuk halaman Kelola Mahasiswa Admin)
 func (h *AcademicHandler) GetAllMahasiswa(w http.ResponseWriter, r *http.Request) {
-	list, err := h.academicRepo.GetAllMahasiswa(r.Context())
+	list, err := h.academicService.GetAllMahasiswa(r.Context())
 	if err != nil {
 		h.logger.Error("Failed to get mahasiswa list", zap.Error(err))
 		response.Error(w, http.StatusInternalServerError, "Gagal mengambil data mahasiswa", err.Error())
@@ -96,25 +92,14 @@ func (h *AcademicHandler) CreateMahasiswa(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Validasi minimal
+	// Validasi dasar
 	if len(req.Password) < 6 {
 		response.Error(w, http.StatusBadRequest, "Password terlalu pendek", "Minimal 6 karakter")
 		return
 	}
-	if req.NIM == "" || req.NamaLengkap == "" || req.ProgramStudi == "" || req.Angkatan == 0 {
-		response.Error(w, http.StatusBadRequest, "Data tidak lengkap", "Pastikan NIM, Nama, Prodi, dan Angkatan terisi")
-		return
-	}
 
-	// Hash password
-	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		h.logger.Error("Failed to hash password", zap.Error(err))
-		response.Error(w, http.StatusInternalServerError, "Gagal mengamankan password", err.Error())
-		return
-	}
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 
-	// Persiapkan entitas Mahasiswa
 	m := model.Mahasiswa{
 		NIM:          req.NIM,
 		NamaLengkap:  req.NamaLengkap,
@@ -123,16 +108,18 @@ func (h *AcademicHandler) CreateMahasiswa(w http.ResponseWriter, r *http.Request
 		JalurMasuk:   req.JalurMasuk,
 	}
 
-	// Panggil layer aksi transaksional (memasukkan ke `users` lalu `mahasiswa`)
-	err = h.academicRepo.CreateMahasiswaTx(r.Context(), &m, string(hashed))
+	// Panggil Service Layer (Validasi Regex NIM dilakukan di sana)
+	err := h.academicService.CreateMahasiswa(r.Context(), &m, string(hashed))
 	if err != nil {
 		h.logger.Error("Failed to insert mahasiswa", zap.Error(err))
-		response.Error(w, http.StatusInternalServerError, "Gagal menambahkan mahasiswa", "Periksa kembali (NIM mungkin sudah terdaftar)")
+		// Pesan error dari service/repository sudah cantik (PgError parsing)
+		response.Error(w, http.StatusInternalServerError, "Gagal menambahkan mahasiswa", err.Error())
 		return
 	}
 
 	response.Success(w, http.StatusCreated, "Mahasiswa berhasil didaftarkan", m)
 }
+
 
 // CreateDosen — POST /api/admin/dosen
 func (h *AcademicHandler) CreateDosen(w http.ResponseWriter, r *http.Request) {

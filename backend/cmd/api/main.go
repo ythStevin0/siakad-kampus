@@ -48,7 +48,8 @@ func main() {
 
 	// Layer Akademik (Phase 6)
 	academicRepo := repository.NewAcademicRepository(db)
-	academicHandler := handler.NewAcademicHandler(academicRepo, logger)
+	academicService := service.NewAcademicService(academicRepo)
+	academicHandler := handler.NewAcademicHandler(academicService, logger)
 
 	// 5. Init router
 	r := chi.NewRouter()
