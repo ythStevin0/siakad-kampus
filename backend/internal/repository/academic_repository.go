@@ -221,6 +221,97 @@ func (r *AcademicRepository) CreateMahasiswaTx(ctx context.Context, m *model.Mah
 	return nil
 }
 
+// --- CRUD DOSEN ---
+
+// CreateDosenTx membuat user dan profil dosen secara transaksional
+func (r *AcademicRepository) CreateDosenTx(ctx context.Context, d *model.Dosen, hashedPassword string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// email asumsi didasarkan pada NIDN untuk kesederhanaan, atau bisa pakai nama
+	email := fmt.Sprintf("%s@dosen.uisi.ac.id", d.NIDN)
+	if d.Email != "" {
+		email = d.Email
+	}
+
+	userQuery := `
+		INSERT INTO users (email, password, role, is_active)
+		VALUES ($1, $2, 'dosen', true)
+		RETURNING id
+	`
+	err = tx.QueryRow(ctx, userQuery, email, hashedPassword).Scan(&d.UserID)
+	if err != nil {
+		return parsePgError(err)
+	}
+
+	dosenQuery := `
+		INSERT INTO dosen (user_id, nidn, nama_lengkap, gelar_depan, gelar_belakang, departemen)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, created_at, updated_at
+	`
+	err = tx.QueryRow(ctx, dosenQuery, 
+		d.UserID, d.NIDN, d.NamaLengkap, d.GelarDepan, d.GelarBelakang, d.Departemen,
+	).Scan(&d.ID, &d.CreatedAt, &d.UpdatedAt)
+	
+	if err != nil {
+		return parsePgError(err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return parsePgError(err)
+	}
+
+	return nil
+}
+
+// --- CRUD MATA KULIAH ---
+
+// CreateMataKuliah menambah mata kuliah baru
+func (r *AcademicRepository) CreateMataKuliah(ctx context.Context, mk *model.MataKuliah) error {
+	query := `
+		INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, semester)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at, updated_at
+	`
+	err := r.db.QueryRow(ctx, query, mk.KodeMK, mk.NamaMK, mk.SKS, mk.Semester).
+		Scan(&mk.ID, &mk.CreatedAt, &mk.UpdatedAt)
+		
+	if err != nil {
+		return parsePgError(err)
+	}
+	return nil
+}
+
+// GetAllMataKuliah mereturn daftar semua mata kuliah
+func (r *AcademicRepository) GetAllMataKuliah(ctx context.Context) ([]model.MataKuliah, error) {
+	query := `
+		SELECT id, kode_mk, nama_mk, sks, semester, created_at, updated_at
+		FROM mata_kuliah
+		ORDER BY semester ASC, kode_mk ASC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query mata kuliah: %w", err)
+	}
+	defer rows.Close()
+
+	list := make([]model.MataKuliah, 0)
+	for rows.Next() {
+		var mk model.MataKuliah
+		if err := rows.Scan(
+			&mk.ID, &mk.KodeMK, &mk.NamaMK, &mk.SKS, &mk.Semester,
+			&mk.CreatedAt, &mk.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan mata kuliah: %w", err)
+		}
+		list = append(list, mk)
+	}
+	return list, nil
+}
+
 // parsePgError menerjemahkan kode error PostgreSQL menjadi pesan yang bermakna
 func parsePgError(err error) error {
 	var pgErr *pgconn.PgError
