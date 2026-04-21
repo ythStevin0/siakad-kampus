@@ -102,3 +102,36 @@ export async function createMahasiswa(payload: Record<string, any>) {
   });
   return res.data;
 }
+
+export async function createDosen(payload: Record<string, any>) {
+  const res = await apiFetch("/api/admin/dosen", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
+// =============================================
+// DATA MATA KULIAH
+// =============================================
+export interface MataKuliah {
+  id: string;
+  kode_mk: string;
+  nama_mk: string;
+  sks: number;
+  semester: number;
+}
+
+export async function fetchAllMataKuliah(): Promise<MataKuliah[]> {
+  const res = await apiFetch("/api/admin/mata-kuliah");
+  return (res.data as MataKuliah[]) || [];
+}
+
+export async function createMataKuliah(payload: Record<string, any>) {
+  const res = await apiFetch("/api/admin/mata-kuliah", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
