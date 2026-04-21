@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { fetchAllMahasiswa, createMahasiswa, type Mahasiswa } from "../lib/api";
 import { Modal } from "../components/ui/Modal";
+import { InputField } from "../components/ui/InputField";
+import { SelectField } from "../components/ui/SelectField";
 
 export default function AdminMahasiswa() {
   const [mahasiswaList, setMahasiswaList] = useState<Mahasiswa[]>([]);
@@ -153,74 +155,80 @@ export default function AdminMahasiswa() {
           )}
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">NIM</label>
-              <input
-                required type="text" name="nim" value={formData.nim} onChange={handleChange}
-                placeholder="Contoh: 3012410001"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500/50"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Angkatan</label>
-              <input
-                required type="number" name="angkatan" value={formData.angkatan} onChange={handleChange} min={2000} max={2100}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500/50"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nama Lengkap</label>
-            <input
-              required type="text" name="nama_lengkap" value={formData.nama_lengkap} onChange={handleChange}
-              placeholder="Sesuai Akta Kelahiran"
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500/50"
+            <InputField
+              label="NIM"
+              name="nim"
+              value={formData.nim}
+              onChange={handleChange}
+              placeholder="Contoh: 3012410001"
+              required
+            />
+            <InputField
+              label="Angkatan"
+              name="angkatan"
+              type="number"
+              value={formData.angkatan}
+              onChange={handleChange}
+              required
             />
           </div>
 
+          <InputField
+            label="Nama Lengkap"
+            name="nama_lengkap"
+            value={formData.nama_lengkap}
+            onChange={handleChange}
+            placeholder="Sesuai Akta Kelahiran"
+            required
+          />
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Program Studi</label>
-              <select
-                name="program_studi" value={formData.program_studi} onChange={handleChange} required
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500/50"
-              >
-                <option value="" disabled>Pilih Prodi</option>
-                <option value="Teknik Informatika">Teknik Informatika</option>
-                <option value="Sistem Informasi">Sistem Informasi</option>
-                <option value="Manajemen Rekayasa">Manajemen Rekayasa</option>
-                <option value="Desain Komunikasi Visual">Desain Komunikasi Visual</option>
-                <option value="Manajemen">Manajemen</option>
-                <option value="Akuntansi">Akuntansi</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Jalur Masuk</label>
-              <select
-                name="jalur_masuk" value={formData.jalur_masuk} onChange={handleChange} required
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500/50"
-              >
-                <option value="SNBP">SNBP</option>
-                <option value="SNBT">SNBT</option>
-                <option value="Mandiri">Mandiri</option>
-                <option value="Prestasi">Prestasi</option>
-              </select>
-            </div>
+            <SelectField
+              label="Program Studi"
+              name="program_studi"
+              value={formData.program_studi}
+              onChange={handleChange}
+              required
+              options={[
+                { value: "Teknik Informatika", label: "Teknik Informatika" },
+                { value: "Sistem Informasi", label: "Sistem Informasi" },
+                { value: "Manajemen Rekayasa", label: "Manajemen Rekayasa" },
+                { value: "Desain Komunikasi Visual", label: "Desain Komunikasi Visual" },
+                { value: "Manajemen", label: "Manajemen" },
+                { value: "Akuntansi", label: "Akuntansi" },
+              ]}
+            />
+            <SelectField
+              label="Jalur Masuk"
+              name="jalur_masuk"
+              value={formData.jalur_masuk}
+              onChange={handleChange}
+              required
+              options={[
+                { value: "SNBP", label: "SNBP" },
+                { value: "SNBT", label: "SNBT" },
+                { value: "Mandiri", label: "Mandiri" },
+                { value: "Prestasi", label: "Prestasi" },
+              ]}
+            />
           </div>
 
           {/* Pemisah antara profil dan autentikasi */}
           <div className="border-t border-zinc-800 my-4"></div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Password Mahasiswa Baru</label>
-            <input
-              required type="text" name="password" value={formData.password} onChange={handleChange}
-              placeholder="Minimal 6 karakter" minLength={6}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-red-500/50 placeholder:text-zinc-700"
+            <InputField
+              label="Password Mahasiswa Baru"
+              name="password"
+              type="text"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Minimal 6 karakter"
+              required
             />
-            <p className="text-[10px] text-zinc-500 mt-1">Username otomatis: <span className="text-zinc-400 font-mono">{formData.nim || "[nim]"}@mahasiswa.uisi.ac.id</span></p>
+            <p className="text-[10px] text-zinc-500 mt-1">
+              Username otomatis: <span className="text-zinc-400 font-mono">{formData.nim || "[nim]"}@mahasiswa.uisi.ac.id</span>
+            </p>
           </div>
 
           <div className="mt-6 flex justify-end gap-3 pt-2">
