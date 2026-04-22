@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	"siakad/backend/internal/model"
+
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"siakad/backend/internal/model"
 )
 
 // AcademicRepository menangani semua operasi database
@@ -48,11 +49,11 @@ func (r *AcademicRepository) GetStats(ctx context.Context) (map[string]int64, er
 
 // SearchResult digunakan untuk hasil pencarian gabungan mahasiswa & dosen
 type SearchResult struct {
-	Tipe         string  `json:"tipe"`          // "mahasiswa" atau "dosen"
-	NamaLengkap  string  `json:"nama_lengkap"`
-	Identifier   string  `json:"identifier"`    // NIM atau NIDN
-	Email        string  `json:"email"`
-	Detail       string  `json:"detail"`        // Prodi atau Departemen
+	Tipe        string `json:"tipe"` // "mahasiswa" atau "dosen"
+	NamaLengkap string `json:"nama_lengkap"`
+	Identifier  string `json:"identifier"` // NIM atau NIDN
+	Email       string `json:"email"`
+	Detail      string `json:"detail"` // Prodi atau Departemen
 }
 
 // SearchUsers mencari pengguna berdasarkan NIM, NIDN, nama, atau email
@@ -205,10 +206,10 @@ func (r *AcademicRepository) CreateMahasiswaTx(ctx context.Context, m *model.Mah
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at
 	`
-	err = tx.QueryRow(ctx, mahasiswaQuery, 
+	err = tx.QueryRow(ctx, mahasiswaQuery,
 		m.UserID, m.NIM, m.NamaLengkap, m.ProgramStudi, m.Angkatan, m.JalurMasuk,
 	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt)
-	
+
 	if err != nil {
 		return parsePgError(err)
 	}
@@ -231,11 +232,8 @@ func (r *AcademicRepository) CreateDosenTx(ctx context.Context, d *model.Dosen, 
 	}
 	defer tx.Rollback(ctx)
 
-	// email asumsi didasarkan pada NIDN untuk kesederhanaan, atau bisa pakai nama
+	// email otomatis dibuat dengan format: [NIDN]@dosen.uisi.ac.id
 	email := fmt.Sprintf("%s@dosen.uisi.ac.id", d.NIDN)
-	if d.Email != "" {
-		email = d.Email
-	}
 
 	userQuery := `
 		INSERT INTO users (email, password, role, is_active)
@@ -252,10 +250,10 @@ func (r *AcademicRepository) CreateDosenTx(ctx context.Context, d *model.Dosen, 
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at
 	`
-	err = tx.QueryRow(ctx, dosenQuery, 
+	err = tx.QueryRow(ctx, dosenQuery,
 		d.UserID, d.NIDN, d.NamaLengkap, d.GelarDepan, d.GelarBelakang, d.Departemen,
 	).Scan(&d.ID, &d.CreatedAt, &d.UpdatedAt)
-	
+
 	if err != nil {
 		return parsePgError(err)
 	}
@@ -278,7 +276,7 @@ func (r *AcademicRepository) CreateMataKuliah(ctx context.Context, mk *model.Mat
 	`
 	err := r.db.QueryRow(ctx, query, mk.KodeMK, mk.NamaMK, mk.SKS, mk.Semester).
 		Scan(&mk.ID, &mk.CreatedAt, &mk.UpdatedAt)
-		
+
 	if err != nil {
 		return parsePgError(err)
 	}
