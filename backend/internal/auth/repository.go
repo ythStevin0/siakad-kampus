@@ -1,4 +1,4 @@
-package repository
+package auth
 
 import (
 	"context"
@@ -8,8 +8,7 @@ import (
 	"siakad/backend/internal/model"
 )
 
-// AuthRepository menangani semua operasi database
-// yang berkaitan dengan autentikasi
+// AuthRepository menangani semua operasi database yang berkaitan dengan autentikasi
 type AuthRepository struct {
 	db *pgxpool.Pool
 }
@@ -20,7 +19,6 @@ func NewAuthRepository(db *pgxpool.Pool) *AuthRepository {
 }
 
 // FindUserByEmail mencari user berdasarkan email
-// Digunakan saat proses login
 func (r *AuthRepository) FindUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	user := &model.User{}
 	query := `
@@ -44,7 +42,6 @@ func (r *AuthRepository) FindUserByEmail(ctx context.Context, email string) (*mo
 }
 
 // FindUserByID mencari user berdasarkan ID
-// Digunakan saat proses refresh token
 func (r *AuthRepository) FindUserByID(ctx context.Context, id string) (*model.User, error) {
 	user := &model.User{}
 	query := `
@@ -81,7 +78,6 @@ func (r *AuthRepository) SaveRefreshToken(ctx context.Context, token *model.Refr
 }
 
 // FindRefreshToken mencari refresh token yang valid
-// Digunakan saat client minta access token baru
 func (r *AuthRepository) FindRefreshToken(ctx context.Context, token string) (*model.RefreshToken, error) {
 	rt := &model.RefreshToken{}
 	query := `

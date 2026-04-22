@@ -1,4 +1,4 @@
-package service
+package auth
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"siakad/backend/internal/model"
-	"siakad/backend/internal/repository"
 )
 
 // Durasi hidup masing-masing token
@@ -18,8 +17,7 @@ const (
 	RefreshTokenDuration = 7 * 24 * time.Hour
 )
 
-// domainByRole mendefinisikan domain email
-// yang diizinkan untuk setiap role
+// domainByRole mendefinisikan domain email yang diizinkan untuk setiap role
 var domainByRole = map[model.UserRole]string{
 	model.RoleMahasiswa: "@mahasiswa.uisi.ac.id",
 	model.RoleDosen:     "@dosen.uisi.ac.id",
@@ -27,7 +25,6 @@ var domainByRole = map[model.UserRole]string{
 }
 
 // Claims adalah isi payload JWT kita
-// Berisi informasi user yang disimpan di dalam token
 type Claims struct {
 	UserID string         `json:"user_id"`
 	Email  string         `json:"email"`
@@ -37,20 +34,19 @@ type Claims struct {
 
 // AuthService menangani semua logika bisnis autentikasi
 type AuthService struct {
-	repo      *repository.AuthRepository
+	repo      *AuthRepository
 	jwtSecret string
 }
 
 // NewAuthService membuat instance baru AuthService
-func NewAuthService(repo *repository.AuthRepository, jwtSecret string) *AuthService {
+func NewAuthService(repo *AuthRepository, jwtSecret string) *AuthService {
 	return &AuthService{
 		repo:      repo,
 		jwtSecret: jwtSecret,
 	}
 }
 
-// validateEmailDomain memastikan email yang digunakan
-// sesuai dengan domain kampus dan role yang dipilih
+// validateEmailDomain memastikan email yang digunakan sesuai dengan domain kampus dan role yang dipilih
 func validateEmailDomain(email string, role model.UserRole) error {
 	expectedDomain, ok := domainByRole[role]
 	if !ok {
@@ -82,26 +78,19 @@ type LoginResponse struct {
 
 // Login memvalidasi kredensial dan menghasilkan token
 func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*LoginResponse, string, error) {
-	// 1. Validasi field tidak kosong
 	if req.Email == "" || req.Password == "" {
 		return nil, "", fmt.Errorf("email dan password tidak boleh kosong")
 	}
 
-	// 2. Cari user di database berdasarkan email
 	user, err := s.repo.FindUserByEmail(ctx, req.Email)
 	if err != nil {
-		// Pesan error dibuat generik agar penyerang
-		// tidak tahu apakah email terdaftar atau tidak
 		return nil, "", fmt.Errorf("email atau password salah")
 	}
 
-	// 3. Validasi domain email sesuai role user
 	if err := validateEmailDomain(user.Email, user.Role); err != nil {
 		return nil, "", err
 	}
 
-	// 4. Bandingkan password dengan hash di database
-	// bcrypt.CompareHashAndPassword aman dari timing attack
 	if err := bcrypt.CompareHashAndPassword(
 		[]byte(user.Password),
 		[]byte(req.Password),
@@ -109,13 +98,11 @@ func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*LoginRespon
 		return nil, "", fmt.Errorf("email atau password salah")
 	}
 
-	// 5. Generate access token (berlaku 15 menit)
 	accessToken, err := s.generateAccessToken(user)
 	if err != nil {
 		return nil, "", fmt.Errorf("gagal membuat access token")
 	}
 
-	// 6. Generate refresh token (berlaku 7 hari)
 	refreshToken, err := s.generateRefreshToken(ctx, user)
 	if err != nil {
 		return nil, "", fmt.Errorf("gagal membuat refresh token")
@@ -145,11 +132,8 @@ func (s *AuthService) generateAccessToken(user *model.User) (string, error) {
 	return token.SignedString([]byte(s.jwtSecret))
 }
 
-// generateRefreshToken membuat refresh token acak
-// dan menyimpannya ke database
+// generateRefreshToken membuat refresh token acak dan menyimpannya ke database
 func (s *AuthService) generateRefreshToken(ctx context.Context, user *model.User) (string, error) {
-	// Refresh token menggunakan JWT juga
-	// tapi dengan expiry yang lebih panjang
 	claims := jwt.RegisteredClaims{
 		Subject:   user.ID,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenDuration)),
@@ -163,7 +147,6 @@ func (s *AuthService) generateRefreshToken(ctx context.Context, user *model.User
 		return "", err
 	}
 
-	// Simpan refresh token ke database
 	rt := &model.RefreshToken{
 		UserID:    user.ID,
 		Token:     tokenString,
@@ -193,21 +176,17 @@ func (s *AuthService) parseRefreshToken(refreshToken string) (*jwt.RegisteredCla
 }
 
 // RefreshAccessToken menukar refresh token dengan access token baru
-// sekaligus melakukan rotasi refresh token agar token lama tidak bisa dipakai lagi
 func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken string) (string, string, error) {
-	// 1. Cari refresh token di database
 	rt, err := s.repo.FindRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("refresh token tidak valid")
 	}
 
-	// 2. Validasi signature dan claims JWT refresh token
 	claims, err := s.parseRefreshToken(refreshToken)
 	if err != nil {
 		return "", "", err
 	}
 
-	// 3. Cek apakah token sudah expired
 	if time.Now().After(rt.ExpiresAt) {
 		return "", "", fmt.Errorf("refresh token sudah expired")
 	}
@@ -216,18 +195,15 @@ func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken strin
 		return "", "", fmt.Errorf("refresh token tidak cocok dengan user")
 	}
 
-	// 4. Ambil data user
 	user, err := s.repo.FindUserByID(ctx, rt.UserID)
 	if err != nil {
 		return "", "", fmt.Errorf("user tidak ditemukan")
 	}
 
-	// 5. Revoke refresh token lama agar tidak bisa dipakai ulang
 	if err := s.repo.RevokeRefreshToken(ctx, refreshToken); err != nil {
 		return "", "", fmt.Errorf("gagal mencabut refresh token lama")
 	}
 
-	// 6. Generate pasangan token baru
 	accessToken, err := s.generateAccessToken(user)
 	if err != nil {
 		return "", "", fmt.Errorf("gagal membuat access token")

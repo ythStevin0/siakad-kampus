@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 
+	"siakad/backend/internal/auth"
 	"siakad/backend/internal/handler"
 	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
@@ -41,10 +42,10 @@ func main() {
 	defer db.Close()
 
 	// 4. Init semua layer (repository → service → handler)
-	// Urutan ini penting — setiap layer butuh layer di bawahnya
-	authRepo := repository.NewAuthRepository(db)
-	authService := service.NewAuthService(authRepo, os.Getenv("JWT_SECRET"))
-	authHandler := handler.NewAuthHandler(authService, logger)
+	// Layer Autentikasi (Domain Auth)
+	authRepo := auth.NewAuthRepository(db)
+	authService := auth.NewAuthService(authRepo, os.Getenv("JWT_SECRET"))
+	authHandler := auth.NewAuthHandler(authService, logger)
 
 	// Layer Akademik (Phase 6)
 	academicRepo := repository.NewAcademicRepository(db)
