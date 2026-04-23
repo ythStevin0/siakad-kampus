@@ -21,7 +21,8 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 
 func (r *Repository) GetAll(ctx context.Context) ([]model.Mahasiswa, error) {
 	query := `
-		SELECT id, user_id, nim, nama_lengkap, program_studi, angkatan, jalur_masuk, created_at, updated_at
+		SELECT id, user_id, nim, nama_lengkap, program_studi, angkatan, jalur_masuk, 
+		       status_ukt, status_bip, izin_krs, created_at, updated_at
 		FROM mahasiswa
 		ORDER BY angkatan DESC, nama_lengkap ASC
 	`
@@ -37,6 +38,7 @@ func (r *Repository) GetAll(ctx context.Context) ([]model.Mahasiswa, error) {
 		if err := rows.Scan(
 			&m.ID, &m.UserID, &m.NIM, &m.NamaLengkap,
 			&m.ProgramStudi, &m.Angkatan, &m.JalurMasuk,
+			&m.StatusUKT, &m.StatusBIP, &m.IzinKRS,
 			&m.CreatedAt, &m.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan mahasiswa: %w", err)
@@ -85,4 +87,30 @@ func (r *Repository) CreateTx(ctx context.Context, m *model.Mahasiswa, hashedPas
 	}
 
 	return nil
+}
+
+func (r *Repository) Update(ctx context.Context, m *model.Mahasiswa) error {
+	query := `
+		UPDATE mahasiswa 
+		SET nama_lengkap = $1, program_studi = $2, angkatan = $3, jalur_masuk = $4, 
+		    status_ukt = $5, status_bip = $6, izin_krs = $7, updated_at = NOW()
+		WHERE id = $8
+	`
+	_, err := r.db.Exec(ctx, query, 
+		m.NamaLengkap, m.ProgramStudi, m.Angkatan, m.JalurMasuk, 
+		m.StatusUKT, m.StatusBIP, m.IzinKRS, m.ID)
+	return database.ParsePgError(err)
+}
+
+func (r *Repository) Delete(ctx context.Context, id string) error {
+	// Ambil user_id dulu agar bisa menghapus user-nya juga (karena ON DELETE CASCADE di tabel mahasiswa ke users)
+	// Namun di schema kita, mahasiswa REFERENCES users. Jadi hapus users akan hapus mahasiswa.
+	var userID string
+	err := r.db.QueryRow(ctx, "SELECT user_id FROM mahasiswa WHERE id = $1", id).Scan(&userID)
+	if err != nil {
+		return database.ParsePgError(err)
+	}
+
+	_, err = r.db.Exec(ctx, "DELETE FROM users WHERE id = $1", userID)
+	return database.ParsePgError(err)
 }

@@ -1,0 +1,4 @@
+ALTER TABLE mahasiswa 
+DROP COLUMN IF EXISTS status_ukt,
+DROP COLUMN IF EXISTS status_bip,
+DROP COLUMN IF EXISTS izin_krs;

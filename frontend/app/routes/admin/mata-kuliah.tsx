@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, BookOpen, GraduationCap, Clock, Layers, Trash2, Edit } from "lucide-react";
-import InputField from "../../components/ui/InputField";
-import SelectField from "../../components/ui/SelectField";
-import Modal from "../../components/ui/Modal";
+import { InputField } from "../../components/ui/InputField";
+import { SelectField } from "../../components/ui/SelectField";
+import { Modal } from "../../components/ui/Modal";
 import { fetchAllMataKuliah, createMataKuliah, type MataKuliah } from "../../lib/api";
 
 export default function AdminMataKuliah() {
@@ -36,6 +36,11 @@ export default function AdminMataKuliah() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: name === "sks" || name === "semester" ? Number(value) : value }));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -191,23 +196,26 @@ export default function AdminMataKuliah() {
         <form onSubmit={handleCreate} className="space-y-4">
           <InputField
             label="Kode Mata Kuliah"
+            name="kode_mk"
             placeholder="Contoh: IF101 / MKDU-01"
             required
             value={formData.kode_mk}
-            onChange={(v) => setFormData({ ...formData, kode_mk: v })}
+            onChange={handleInputChange}
           />
           
           <InputField
             label="Nama Mata Kuliah"
+            name="nama_mk"
             placeholder="Contoh: Algoritma & Pemrograman"
             required
             value={formData.nama_mk}
-            onChange={(v) => setFormData({ ...formData, nama_mk: v })}
+            onChange={handleInputChange}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <SelectField
               label="Jumlah SKS"
+              name="sks"
               options={[
                 { value: "1", label: "1 SKS" },
                 { value: "2", label: "2 SKS" },
@@ -217,10 +225,11 @@ export default function AdminMataKuliah() {
               ]}
               required
               value={formData.sks.toString()}
-              onChange={(v) => setFormData({ ...formData, sks: Number(v) })}
+              onChange={handleInputChange}
             />
             <SelectField
               label="Semester"
+              name="semester"
               options={[
                 { value: "1", label: "Semester 1" },
                 { value: "2", label: "Semester 2" },
@@ -233,7 +242,7 @@ export default function AdminMataKuliah() {
               ]}
               required
               value={formData.semester.toString()}
-              onChange={(v) => setFormData({ ...formData, semester: Number(v) })}
+              onChange={handleInputChange}
             />
           </div>
 

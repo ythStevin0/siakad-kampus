@@ -88,6 +88,9 @@ export interface Mahasiswa {
   program_studi: string;
   angkatan: number;
   jalur_masuk: string | null;
+  status_ukt: boolean;
+  status_bip: boolean;
+  izin_krs: boolean;
 }
 
 export async function fetchAllMahasiswa(): Promise<Mahasiswa[]> {
@@ -99,6 +102,21 @@ export async function createMahasiswa(payload: Record<string, any>) {
   const res = await apiFetch("/api/admin/mahasiswa", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
+export async function updateMahasiswa(id: string, payload: Record<string, any>) {
+  const res = await apiFetch(`/api/admin/mahasiswa/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
+export async function deleteMahasiswa(id: string) {
+  const res = await apiFetch(`/api/admin/mahasiswa/${id}`, {
+    method: "DELETE",
   });
   return res.data;
 }

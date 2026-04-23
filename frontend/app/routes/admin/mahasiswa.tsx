@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { fetchAllMahasiswa, createMahasiswa, type Mahasiswa } from "../../lib/api";
-import Modal from "../../components/ui/Modal";
-import InputField from "../../components/ui/InputField";
-import SelectField from "../../components/ui/SelectField";
+import { fetchAllMahasiswa, createMahasiswa, updateMahasiswa, deleteMahasiswa, type Mahasiswa } from "../../lib/api";
+import { Modal } from "../../components/ui/Modal";
+import { InputField } from "../../components/ui/InputField";
+import { SelectField } from "../../components/ui/SelectField";
+import { UserPlus, Edit, Trash2, GraduationCap, Building2, Calendar, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
 
 export default function AdminMahasiswa() {
   const [mahasiswaList, setMahasiswaList] = useState<Mahasiswa[]>([]);
@@ -10,17 +11,20 @@ export default function AdminMahasiswa() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     nim: "",
     nama_lengkap: "",
-    program_studi: "",
+    program_studi: "Teknik Informatika",
     angkatan: new Date().getFullYear(),
     jalur_masuk: "SNBT",
+    status_ukt: false,
+    status_bip: false,
+    izin_krs: false,
     password: "",
   });
 
-  // Fetch list mahasiswa
   const loadMahasiswa = () => {
     setLoading(true);
     fetchAllMahasiswa()
@@ -34,11 +38,58 @@ export default function AdminMahasiswa() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "angkatan" ? parseInt(value) : value,
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : 
+              name === "angkatan" ? parseInt(value) : value,
     }));
+  };
+
+  const toggleCheckbox = (name: string) => {
+    setFormData(prev => ({ ...prev, [name]: !((prev as any)[name]) }));
+  };
+
+  const openAddModal = () => {
+    setEditingId(null);
+    setFormData({
+      nim: "",
+      nama_lengkap: "",
+      program_studi: "Teknik Informatika",
+      angkatan: new Date().getFullYear(),
+      jalur_masuk: "SNBT",
+      status_ukt: false,
+      status_bip: false,
+      izin_krs: false,
+      password: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (m: Mahasiswa) => {
+    setEditingId(m.id);
+    setFormData({
+      nim: m.nim,
+      nama_lengkap: m.nama_lengkap,
+      program_studi: m.program_studi,
+      angkatan: m.angkatan,
+      jalur_masuk: m.jalur_masuk || "SNBT",
+      status_ukt: m.status_ukt,
+      status_bip: m.status_bip,
+      izin_krs: m.izin_krs,
+      password: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string, nama: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus mahasiswa ${nama}? Akun login juga akan dihapus.`)) return;
+    try {
+      await deleteMahasiswa(id);
+      loadMahasiswa();
+    } catch (err: any) {
+      alert("Gagal menghapus: " + err.message);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,15 +97,13 @@ export default function AdminMahasiswa() {
     setErrorMsg("");
     setSubmitting(true);
     try {
-      await createMahasiswa(formData);
-      setIsModalOpen(false); // Tutup modal
-      setFormData({ // Reset form
-        ...formData,
-        nim: "",
-        nama_lengkap: "",
-        password: "",
-      });
-      loadMahasiswa(); // Refresh tabel
+      if (editingId) {
+        await updateMahasiswa(editingId, formData);
+      } else {
+        await createMahasiswa(formData);
+      }
+      setIsModalOpen(false);
+      loadMahasiswa();
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -64,188 +113,257 @@ export default function AdminMahasiswa() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-light text-zinc-100">
-            Kelola <span className="text-zinc-500 font-normal">Mahasiswa</span>
+          <h1 className="text-2xl font-semibold text-zinc-100 flex items-center gap-2">
+            <GraduationCap className="w-6 h-6 text-red-500" />
+            Kelola Mahasiswa
           </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            Data master mahasiswa terdaftar.
-          </p>
+          <p className="text-sm text-zinc-500 mt-1">Manajemen data akademik, keuangan, dan akun.</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          onClick={openAddModal}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-all shadow-lg shadow-red-600/20 text-sm font-medium"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
+          <UserPlus className="w-4 h-4" />
           Tambah Mahasiswa
         </button>
       </div>
 
-      {/* Tabel Data Grid */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+      {/* Tabel */}
+      <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden backdrop-blur-md">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-zinc-400">
-            <thead className="bg-zinc-800/50 text-xs uppercase font-medium text-zinc-500 border-b border-zinc-800">
-              <tr>
-                <th className="px-6 py-4">NIM</th>
-                <th className="px-6 py-4">Nama Lengkap</th>
-                <th className="px-6 py-4">Program Studi</th>
-                <th className="px-6 py-4">Angkatan</th>
-                <th className="px-6 py-4">Jalur Masuk</th>
-                <th className="px-6 py-4 text-right">Aksi</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-zinc-900/60">
+                <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Identitas</th>
+                <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Prodi & Angkatan</th>
+                <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status Keuangan & KRS</th>
+                <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
               {loading ? (
-                // Skeletons
                 [...Array(3)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 w-24 bg-zinc-800 rounded"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 w-40 bg-zinc-800 rounded"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 w-32 bg-zinc-800 rounded"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 w-12 bg-zinc-800 rounded"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 w-20 bg-zinc-800 rounded"></div></td>
-                    <td className="px-6 py-4"></td>
+                    <td className="p-4"><div className="h-10 w-48 bg-zinc-800 rounded"></div></td>
+                    <td className="p-4"><div className="h-4 w-32 bg-zinc-800 rounded"></div></td>
+                    <td className="p-4"><div className="h-4 w-32 bg-zinc-800 rounded"></div></td>
+                    <td className="p-4"></td>
                   </tr>
                 ))
-              ) : mahasiswaList.length === 0 ? (
+              ) : mahasiswaList.length > 0 ? (
+                mahasiswaList.map((m) => (
+                  <tr key={m.id} className="hover:bg-zinc-800/30 transition-colors group">
+                    <td className="p-4">
+                      <div className="flex flex-col">
+                        <span className="text-zinc-100 font-medium">{m.nama_lengkap}</span>
+                        <span className="text-xs text-zinc-500 font-mono tracking-tight flex items-center gap-1 mt-0.5">
+                          {m.nim} • {m.jalur_masuk}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-zinc-300 flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-zinc-500" />
+                          {m.program_studi}
+                        </span>
+                        <span className="text-xs text-zinc-500 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Angkatan {m.angkatan}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                          m.status_ukt ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                        }`}>
+                          {m.status_ukt ? <CheckCircle2 size={10}/> : <XCircle size={10}/>}
+                          UKT
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                          m.status_bip ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+                        }`}>
+                          {m.status_bip ? <CheckCircle2 size={10}/> : <XCircle size={10}/>}
+                          BIP
+                        </span>
+                        {m.izin_krs && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                            <ShieldCheck size={10}/>
+                            IZIN KRS
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => openEditModal(m)}
+                          className="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-zinc-100 transition-colors"
+                          title="Edit Data"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(m.id, m.nama_lengkap)}
+                          className="p-2 hover:bg-red-500/10 rounded-lg text-zinc-500 hover:text-red-400 transition-colors"
+                          title="Hapus Mahasiswa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-zinc-500">
+                  <td colSpan={4} className="p-12 text-center text-zinc-600 italic text-sm">
                     Belum ada data mahasiswa.
                   </td>
                 </tr>
-              ) : (
-                mahasiswaList.map((m) => (
-                  <tr key={m.id} className="hover:bg-zinc-800/20 transition-colors">
-                    <td className="px-6 py-4 font-mono text-zinc-300">{m.nim}</td>
-                    <td className="px-6 py-4 font-medium text-zinc-100">{m.nama_lengkap}</td>
-                    <td className="px-6 py-4">{m.program_studi}</td>
-                    <td className="px-6 py-4 text-zinc-300">{m.angkatan}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 text-[10px] font-semibold bg-zinc-800 rounded-full text-zinc-400">
-                        {m.jalur_masuk || "-"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-zinc-500 hover:text-blue-400 transition-colors">Edit</button>
-                    </td>
-                  </tr>
-                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal Tambah Mahasiswa */}
-      <Modal 
-        isOpen={isModalOpen} 
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
         onClose={() => !submitting && setIsModalOpen(false)}
-        title="Daftarkan Mahasiswa Baru"
+        title={editingId ? "Edit Data Mahasiswa" : "Daftarkan Mahasiswa Baru"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {errorMsg && (
-            <div className="p-3 text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
               {errorMsg}
             </div>
           )}
-          
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-1">Data Akademik</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                label="NIM"
+                name="nim"
+                value={formData.nim}
+                onChange={handleChange}
+                placeholder="Contoh: 3012410001"
+                required
+                error={editingId ? "NIM tidak dapat diubah" : ""}
+              />
+              <InputField
+                label="Angkatan"
+                name="angkatan"
+                type="number"
+                value={formData.angkatan}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
             <InputField
-              label="NIM"
-              name="nim"
-              value={formData.nim}
+              label="Nama Lengkap"
+              name="nama_lengkap"
+              value={formData.nama_lengkap}
               onChange={handleChange}
-              placeholder="Contoh: 3012410001"
+              placeholder="Sesuai Akta Kelahiran"
               required
             />
-            <InputField
-              label="Angkatan"
-              name="angkatan"
-              type="number"
-              value={formData.angkatan}
-              onChange={handleChange}
-              required
-            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <SelectField
+                label="Program Studi"
+                name="program_studi"
+                value={formData.program_studi}
+                onChange={handleChange}
+                required
+                options={[
+                  { value: "Teknik Informatika", label: "Teknik Informatika" },
+                  { value: "Sistem Informasi", label: "Sistem Informasi" },
+                  { value: "Manajemen Rekayasa", label: "Manajemen Rekayasa" },
+                  { value: "Desain Komunikasi Visual", label: "Desain Komunikasi Visual" },
+                  { value: "Manajemen", label: "Manajemen" },
+                  { value: "Akuntansi", label: "Akuntansi" },
+                ]}
+              />
+              <SelectField
+                label="Jalur Masuk"
+                name="jalur_masuk"
+                value={formData.jalur_masuk}
+                onChange={handleChange}
+                required
+                options={[
+                  { value: "SNBP", label: "SNBP" },
+                  { value: "SNBT", label: "SNBT" },
+                  { value: "Mandiri", label: "Mandiri" },
+                  { value: "Prestasi", label: "Prestasi" },
+                ]}
+              />
+            </div>
           </div>
 
-          <InputField
-            label="Nama Lengkap"
-            name="nama_lengkap"
-            value={formData.nama_lengkap}
-            onChange={handleChange}
-            placeholder="Sesuai Akta Kelahiran"
-            required
-          />
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-1">Status Keuangan & Izin</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <label className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                formData.status_ukt ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-zinc-900 border-zinc-800 text-zinc-500"
+              }`}>
+                <input type="checkbox" className="hidden" checked={formData.status_ukt} onChange={() => toggleCheckbox("status_ukt")} />
+                {formData.status_ukt ? <CheckCircle2 size={16}/> : <XCircle size={16}/>}
+                <span className="text-xs font-medium">Lunas UKT</span>
+              </label>
+              
+              <label className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                formData.status_bip ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-zinc-900 border-zinc-800 text-zinc-500"
+              }`}>
+                <input type="checkbox" className="hidden" checked={formData.status_bip} onChange={() => toggleCheckbox("status_bip")} />
+                {formData.status_bip ? <CheckCircle2 size={16}/> : <XCircle size={16}/>}
+                <span className="text-xs font-medium">Lunas BIP</span>
+              </label>
 
-          <div className="grid grid-cols-2 gap-4">
-            <SelectField
-              label="Program Studi"
-              name="program_studi"
-              value={formData.program_studi}
-              onChange={handleChange}
-              required
-              options={[
-                { value: "Teknik Informatika", label: "Teknik Informatika" },
-                { value: "Sistem Informasi", label: "Sistem Informasi" },
-                { value: "Manajemen Rekayasa", label: "Manajemen Rekayasa" },
-                { value: "Desain Komunikasi Visual", label: "Desain Komunikasi Visual" },
-                { value: "Manajemen", label: "Manajemen" },
-                { value: "Akuntansi", label: "Akuntansi" },
-              ]}
-            />
-            <SelectField
-              label="Jalur Masuk"
-              name="jalur_masuk"
-              value={formData.jalur_masuk}
-              onChange={handleChange}
-              required
-              options={[
-                { value: "SNBP", label: "SNBP" },
-                { value: "SNBT", label: "SNBT" },
-                { value: "Mandiri", label: "Mandiri" },
-                { value: "Prestasi", label: "Prestasi" },
-              ]}
-            />
+              <label className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                formData.izin_krs ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : "bg-zinc-900 border-zinc-800 text-zinc-500"
+              }`}>
+                <input type="checkbox" className="hidden" checked={formData.izin_krs} onChange={() => toggleCheckbox("izin_krs")} />
+                <ShieldCheck size={16}/>
+                <span className="text-xs font-medium">Izin KRS</span>
+              </label>
+            </div>
           </div>
 
-          {/* Pemisah antara profil dan autentikasi */}
-          <div className="border-t border-zinc-800 my-4"></div>
+          {!editingId && (
+            <div className="space-y-1">
+              <InputField
+                label="Password Akun Baru"
+                name="password"
+                type="text"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Minimal 6 karakter"
+                required
+              />
+            </div>
+          )}
 
-          <div className="space-y-1">
-            <InputField
-              label="Password Mahasiswa Baru"
-              name="password"
-              type="text"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Minimal 6 karakter"
-              required
-            />
-            <p className="text-[10px] text-zinc-500 mt-1">
-              Username otomatis: <span className="text-zinc-400 font-mono">{formData.nim || "[nim]"}@mahasiswa.uisi.ac.id</span>
-            </p>
-          </div>
-
-          <div className="mt-6 flex justify-end gap-3 pt-2">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
               disabled={submitting}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-medium transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-red-600/20"
             >
-              {submitting ? "Menyimpan..." : "Simpan Data"}
+              {submitting ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Daftarkan Mahasiswa"}
             </button>
           </div>
         </form>

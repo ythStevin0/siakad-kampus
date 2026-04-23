@@ -42,7 +42,7 @@ func main() {
 	defer db.Close()
 
 	// 4. Init semua domain (Domain-Driven)
-	
+
 	// Auth
 	authRepo := auth.NewAuthRepository(db)
 	authService := auth.NewAuthService(authRepo, os.Getenv("JWT_SECRET"))
@@ -68,7 +68,7 @@ func main() {
 
 	// 5.1 Set up CORS
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -108,16 +108,18 @@ func main() {
 	r.Route("/api/admin", func(r chi.Router) {
 		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
 		r.Use(middleware.RequireRole(model.RoleAdmin))
-		
+
 		r.Get("/stats", adminHandler.GetAdminStats)
-		
+
 		// Mahasiswa
 		r.Get("/mahasiswa", mahasiswaHandler.GetAllMahasiswa)
 		r.Post("/mahasiswa", mahasiswaHandler.Create)
-		
+		r.Put("/mahasiswa/{id}", mahasiswaHandler.Update)
+		r.Delete("/mahasiswa/{id}", mahasiswaHandler.Delete)
+
 		// Dosen
 		r.Post("/dosen", dosenHandler.Create)
-		
+
 		// Mata Kuliah
 		r.Get("/mata-kuliah", adminHandler.GetAllMataKuliah)
 		r.Post("/mata-kuliah", adminHandler.CreateMataKuliah)

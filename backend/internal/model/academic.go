@@ -14,6 +14,9 @@ type Mahasiswa struct {
 	ProgramStudi string    `json:"program_studi" db:"program_studi"`
 	Angkatan     int       `json:"angkatan" db:"angkatan"`
 	JalurMasuk   *string   `json:"jalur_masuk" db:"jalur_masuk"`
+	StatusUKT    bool      `json:"status_ukt" db:"status_ukt"`
+	StatusBIP    bool      `json:"status_bip" db:"status_bip"`
+	IzinKRS      bool      `json:"izin_krs" db:"izin_krs"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }

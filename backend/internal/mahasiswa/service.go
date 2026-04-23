@@ -40,3 +40,17 @@ func (s *Service) Create(ctx context.Context, m *model.Mahasiswa, hashedPassword
 	}
 	return s.repo.CreateTx(ctx, m, hashedPassword)
 }
+
+func (s *Service) Update(ctx context.Context, m *model.Mahasiswa) error {
+	if m.NamaLengkap == "" {
+		return fmt.Errorf("nama tidak boleh kosong")
+	}
+	return s.repo.Update(ctx, m)
+}
+
+func (s *Service) Delete(ctx context.Context, id string) error {
+	if id == "" {
+		return fmt.Errorf("ID tidak valid")
+	}
+	return s.repo.Delete(ctx, id)
+}

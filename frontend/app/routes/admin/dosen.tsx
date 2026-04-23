@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Users, UserPlus, Mail, Building2, Trash2, Edit } from "lucide-react";
-import InputField from "../../components/ui/InputField";
-import SelectField from "../../components/ui/SelectField";
-import Modal from "../../components/ui/Modal";
+import { InputField } from "../../components/ui/InputField";
+import { SelectField } from "../../components/ui/SelectField";
+import { Modal } from "../../components/ui/Modal";
 import { fetchAllDosen, createDosen, type Dosen } from "../../lib/api";
 
 export default function AdminDosen() {
@@ -38,6 +38,11 @@ export default function AdminDosen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -107,7 +112,7 @@ export default function AdminDosen() {
         </button>
       </div>
 
-      {/* Stats Quick View (Optional) */}
+      {/* Stats Quick View */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm">
           <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total Dosen</p>
@@ -211,37 +216,42 @@ export default function AdminDosen() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField
               label="NIDN (10 Digit)"
+              name="nidn"
               placeholder="Contoh: 2011110001"
               required
               value={formData.nidn}
-              onChange={(v) => setFormData({ ...formData, nidn: v })}
+              onChange={handleInputChange}
             />
             <InputField
               label="Nama Lengkap (Tanpa Gelar)"
+              name="nama_lengkap"
               placeholder="Contoh: Stevino Nugroho"
               required
               value={formData.nama_lengkap}
-              onChange={(v) => setFormData({ ...formData, nama_lengkap: v })}
+              onChange={handleInputChange}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField
               label="Gelar Depan (Opsional)"
+              name="gelar_depan"
               placeholder="Contoh: Dr. / Prof."
               value={formData.gelar_depan}
-              onChange={(v) => setFormData({ ...formData, gelar_depan: v })}
+              onChange={handleInputChange}
             />
             <InputField
               label="Gelar Belakang (Opsional)"
+              name="gelar_belakang"
               placeholder="Contoh: M.Kom / Ph.D"
               value={formData.gelar_belakang}
-              onChange={(v) => setFormData({ ...formData, gelar_belakang: v })}
+              onChange={handleInputChange}
             />
           </div>
 
           <SelectField
             label="Departemen"
+            name="departemen"
             options={[
               { value: "Informatika", label: "Teknik Informatika" },
               { value: "Sistem Informasi", label: "Sistem Informasi" },
@@ -253,17 +263,18 @@ export default function AdminDosen() {
             ]}
             required
             value={formData.departemen}
-            onChange={(v) => setFormData({ ...formData, departemen: v })}
+            onChange={handleInputChange}
           />
 
           <div className="space-y-2">
             <InputField
               label="Password Akun"
+              name="password"
               type="password"
               placeholder="Minimal 6 karakter"
               required
               value={formData.password}
-              onChange={(v) => setFormData({ ...formData, password: v })}
+              onChange={handleInputChange}
             />
             <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800/50">
               <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Preview Email Login</p>
