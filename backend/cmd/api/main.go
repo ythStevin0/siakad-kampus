@@ -13,6 +13,7 @@ import (
 
 	"siakad/backend/internal/admin"
 	"siakad/backend/internal/auth"
+	"siakad/backend/internal/berita"
 	"siakad/backend/internal/dosen"
 	"siakad/backend/internal/mahasiswa"
 	"siakad/backend/internal/middleware"
@@ -62,6 +63,10 @@ func main() {
 	mahasiswaRepo := mahasiswa.NewRepository(db)
 	mahasiswaService := mahasiswa.NewService(mahasiswaRepo)
 	mahasiswaHandler := mahasiswa.NewHandler(mahasiswaService, logger)
+
+	beritaRepo := berita.NewRepository(db)
+	beritaService := berita.NewService(beritaRepo)
+	beritaHandler := berita.NewHandler(beritaService, logger)
 
 	// 5. Init router
 	r := chi.NewRouter()
@@ -123,6 +128,14 @@ func main() {
 		// Mata Kuliah
 		r.Get("/mata-kuliah", adminHandler.GetAllMataKuliah)
 		r.Post("/mata-kuliah", adminHandler.CreateMataKuliah)
+	})
+
+	// 9. Berita Routes (Public & Admin)
+	r.Get("/api/berita", beritaHandler.GetAll)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+		r.Post("/api/admin/berita", beritaHandler.Create)
+		r.Delete("/api/admin/berita/{id}", beritaHandler.Delete)
 	})
 
 	// 10. Start Server

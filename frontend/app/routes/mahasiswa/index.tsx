@@ -1,5 +1,7 @@
 import { useOutletContext } from "react-router";
 import { NavLink } from "react-router";
+import { useState, useEffect } from "react";
+import { fetchBerita, type Berita } from "../../lib/api";
 
 // Aplikasi / Menu SSO Cards (sesuai Gapura UISI referensi)
 const appCards = [
@@ -83,44 +85,18 @@ const appCards = [
   },
 ];
 
-// Berita kampus (nanti akan diambil dari API/CMS)
-const berita = [
-  {
-    id: 1,
-    title: "Kebijakan Heregistrasi Cuti Perkuliahan Mahasiswa UISI",
-    excerpt: "Kebijakan Heregistrasi Cuti Perkuliahan Mahasiswa Universitas Internasional Semen Indonesia.",
-    date: "18 Apr 2026",
-  },
-  {
-    id: 2,
-    title: "Pendaftaran Angsuran Pembayaran UKT Semester Ganjil T.A. 2025/2026",
-    excerpt: "Info pendaftaran angsuran pembayaran UKT Semester Ganjil T.A. 2025/2026 segera dibuka.",
-    date: "15 Apr 2026",
-  },
-  {
-    id: 3,
-    title: "Panduan Pembayaran UKT/SPP",
-    excerpt: "Panduan pembayaran UKT/SPP dapat didownload atau akses UISI Pay untuk informasi lebih lanjut.",
-    date: "10 Apr 2026",
-  },
-  {
-    id: 4,
-    title: "Perpanjangan Pembayaran SPP Semester Gasal",
-    excerpt: "INFO UPDATE: Periode pembayaran SPP Semester Gasal 2025/2026 diperpanjang hingga batas waktu.",
-    date: "1 Apr 2026",
-  },
-  {
-    id: 5,
-    title: "Survei Tingkat Kepuasan Mahasiswa",
-    excerpt: "Merupakan salah satu metode pengukur tingkat kepuasan terhadap pelayanan yang telah diberikan UISI.",
-    date: "28 Mar 2026",
-  },
-];
+// Dummy berita dihapus karena akan mengambil dari API
+
 
 type OutletContext = { user: { email: string; role: string; name: string } | null; roleLabel: string };
 
 export default function DashboardIndex() {
   const { user, roleLabel } = useOutletContext<OutletContext>();
+  const [beritaList, setBeritaList] = useState<Berita[]>([]);
+
+  useEffect(() => {
+    fetchBerita().then(setBeritaList).catch(() => setBeritaList([]));
+  }, []);
 
   const firstName = user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "Pengguna";
 
@@ -196,15 +172,21 @@ export default function DashboardIndex() {
           </div>
 
           <div className="space-y-3">
-            {berita.map((item) => (
-              <div key={item.id} className="group cursor-pointer border-b border-white/5 pb-3 last:border-0 last:pb-0">
-                <p className="text-sm font-medium text-blue-400 group-hover:text-blue-300 transition-colors leading-snug">
-                  {item.title}
-                </p>
-                <p className="text-xs text-zinc-600 mt-0.5 leading-relaxed line-clamp-1">{item.excerpt}</p>
-                <p className="text-xs text-zinc-700 mt-1">{item.date}</p>
-              </div>
-            ))}
+            {beritaList.length > 0 ? (
+              beritaList.map((item) => (
+                <div key={item.id} className="group cursor-pointer border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                  <p className="text-sm font-medium text-blue-400 group-hover:text-blue-300 transition-colors leading-snug">
+                    {item.judul}
+                  </p>
+                  <p className="text-xs text-zinc-600 mt-0.5 leading-relaxed line-clamp-1">{item.isi}</p>
+                  <p className="text-[10px] text-zinc-700 mt-1 uppercase tracking-wider">
+                    {new Date(item.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-zinc-600 italic">Belum ada berita terbaru.</p>
+            )}
           </div>
         </div>
       </div>

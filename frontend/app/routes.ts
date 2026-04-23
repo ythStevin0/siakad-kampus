@@ -21,6 +21,7 @@ export default [
     route("mahasiswa", "routes/admin/mahasiswa.tsx"),
     route("dosen", "routes/admin/dosen.tsx"),
     route("mata-kuliah", "routes/admin/mata-kuliah.tsx"),
+    route("berita", "routes/admin/berita.tsx"),
     route("kelas", "routes/admin.kelas.tsx"),
     route("akun", "routes/admin.akun.tsx"),
   ]),

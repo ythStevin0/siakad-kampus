@@ -153,3 +153,35 @@ export async function createMataKuliah(payload: Record<string, any>) {
   return res.data;
 }
 
+// =============================================
+// BERITA / PENGUMUMAN
+// =============================================
+export interface Berita {
+  id: string;
+  judul: string;
+  isi: string;
+  kategori: string;
+  created_at: string;
+}
+
+export async function fetchBerita(): Promise<Berita[]> {
+  const res = await apiFetch("/api/berita");
+  return (res.data as Berita[]) || [];
+}
+
+export async function createBerita(payload: Record<string, any>) {
+  const res = await apiFetch("/api/admin/berita", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
+export async function deleteBerita(id: string) {
+  const res = await apiFetch(`/api/admin/berita/${id}`, {
+    method: "DELETE",
+  });
+  return res.data;
+}
+
+

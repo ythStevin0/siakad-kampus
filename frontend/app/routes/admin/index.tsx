@@ -1,6 +1,6 @@
 import { useOutletContext } from "react-router";
 import { useState, useEffect, type ReactNode } from "react";
-import { fetchAdminStats, type AdminStats } from "../../lib/api";
+import { fetchAdminStats, fetchBerita, type AdminStats, type Berita } from "../../lib/api";
 
 type OutletContext = { user: { email: string; role: string; name: string } | null };
 
@@ -52,6 +52,17 @@ const quickActions = [
     ),
     color: "text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20",
   },
+  {
+    label: "Posting Berita",
+    to: "/admin/berita",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/>
+        <path d="M16 14H8"/><path d="M16 10H8"/>
+      </svg>
+    ),
+    color: "text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20",
+  },
 ];
 
 // Komponen kartu statistik individual
@@ -82,12 +93,15 @@ export default function AdminIndex() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [errorStats, setErrorStats] = useState<string | null>(null);
+  const [beritaList, setBeritaList] = useState<Berita[]>([]);
 
   useEffect(() => {
     fetchAdminStats()
       .then(setStats)
       .catch((err) => setErrorStats(err.message))
       .finally(() => setLoadingStats(false));
+
+    fetchBerita().then(setBeritaList).catch(() => {});
   }, []);
 
   return (
@@ -168,20 +182,36 @@ export default function AdminIndex() {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Berita — Visual Matching User Reference */}
         <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-6 space-y-4">
           <div className="flex items-center gap-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/>
             </svg>
-            <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Riwayat Aktivitas</h2>
+            <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Berita Terakhir</h2>
           </div>
-          <div className="flex flex-col items-center justify-center py-10 text-zinc-700 gap-2">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-            <p className="text-xs text-center">Audit log tersedia setelah data awal dimasukkan</p>
+          <div className="space-y-4">
+            {beritaList.length > 0 ? (
+              beritaList.slice(0, 4).map((item) => (
+                <div key={item.id} className="group cursor-pointer border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                  <p className="text-[13px] font-medium text-blue-400 group-hover:text-blue-300 transition-colors leading-snug">
+                    {item.judul}
+                  </p>
+                  <p className="text-[11px] text-zinc-600 mt-0.5 line-clamp-1">{item.isi}</p>
+                  <p className="text-[10px] text-zinc-700 mt-1 uppercase tracking-wider">
+                    {new Date(item.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-zinc-700 gap-2">
+                 <p className="text-xs italic">Belum ada berita diposting</p>
+              </div>
+            )}
           </div>
+          <a href="/admin/berita" className="block text-center text-[10px] font-bold text-zinc-600 hover:text-zinc-400 uppercase tracking-widest pt-2">
+            Lihat Semua Berita &rsaquo;
+          </a>
         </div>
       </div>
     </div>
