@@ -3,21 +3,24 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 export default [
   index("routes/home.tsx"),
   route("login", "routes/login.tsx"),
-  // Mahasiswa & Dosen
+
+  // Mahasiswa Panel
   route("dashboard", "routes/dashboard.tsx", [
-    index("routes/dashboard._index.tsx"),
-    route("cari-user", "routes/dashboard.cari-user.tsx"),
+    index("routes/mahasiswa/index.tsx"),
+    route("cari-user", "routes/mahasiswa/cari-user.tsx"),
+    route("jadwal", "routes/mahasiswa/jadwal.tsx"),
+    // Placeholder routes (can be moved to folder later as they are implemented)
     route("krs", "routes/dashboard.krs.tsx"),
-    route("jadwal", "routes/dashboard.jadwal.tsx"),
     route("persetujuan-krs", "routes/dashboard.persetujuan-krs.tsx"),
     route("master-data", "routes/dashboard.master-data.tsx"),
   ]),
-  // Admin Panel — terpisah
+
+  // Admin Panel
   route("admin", "routes/admin.tsx", [
-    index("routes/admin._index.tsx"),
-    route("mahasiswa", "routes/admin.mahasiswa.tsx"),
-    route("dosen", "routes/admin.dosen.tsx"),
-    route("mata-kuliah", "routes/admin.mata-kuliah.tsx"),
+    index("routes/admin/index.tsx"),
+    route("mahasiswa", "routes/admin/mahasiswa.tsx"),
+    route("dosen", "routes/admin/dosen.tsx"),
+    route("mata-kuliah", "routes/admin/mata-kuliah.tsx"),
     route("kelas", "routes/admin.kelas.tsx"),
     route("akun", "routes/admin.akun.tsx"),
   ]),
