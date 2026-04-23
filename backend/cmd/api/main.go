@@ -11,12 +11,12 @@ import (
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 
+	"siakad/backend/internal/admin"
 	"siakad/backend/internal/auth"
-	"siakad/backend/internal/handler"
+	"siakad/backend/internal/dosen"
+	"siakad/backend/internal/mahasiswa"
 	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
-	"siakad/backend/internal/repository"
-	"siakad/backend/internal/service"
 	"siakad/backend/pkg/database"
 	"siakad/backend/pkg/response"
 )
@@ -41,23 +41,34 @@ func main() {
 	}
 	defer db.Close()
 
-	// 4. Init semua layer (repository → service → handler)
-	// Layer Autentikasi (Domain Auth)
+	// 4. Init semua domain (Domain-Driven)
+	
+	// Auth
 	authRepo := auth.NewAuthRepository(db)
 	authService := auth.NewAuthService(authRepo, os.Getenv("JWT_SECRET"))
 	authHandler := auth.NewAuthHandler(authService, logger)
 
-	// Layer Akademik (Phase 6)
-	academicRepo := repository.NewAcademicRepository(db)
-	academicService := service.NewAcademicService(academicRepo)
-	academicHandler := handler.NewAcademicHandler(academicService, logger)
+	// Admin (Stats, MK, Search)
+	adminRepo := admin.NewRepository(db)
+	adminService := admin.NewService(adminRepo)
+	adminHandler := admin.NewHandler(adminService, logger)
+
+	// Dosen
+	dosenRepo := dosen.NewRepository(db)
+	dosenService := dosen.NewService(dosenRepo)
+	dosenHandler := dosen.NewHandler(dosenService, logger)
+
+	// Mahasiswa
+	mahasiswaRepo := mahasiswa.NewRepository(db)
+	mahasiswaService := mahasiswa.NewService(mahasiswaRepo)
+	mahasiswaHandler := mahasiswa.NewHandler(mahasiswaService, logger)
 
 	// 5. Init router
 	r := chi.NewRouter()
 
 	// 5.1 Set up CORS
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"}, // Port URL development frontend
+		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -68,7 +79,7 @@ func main() {
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 
-	// 6. Health check — public, tidak butuh auth
+	// 6. Health check
 	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := db.Ping(r.Context()); err != nil {
 			response.Error(w, http.StatusServiceUnavailable, "Database unreachable", err.Error())
@@ -79,39 +90,42 @@ func main() {
 		})
 	})
 
-	// 7. Route auth — public, tidak butuh token
+	// 7. Route Auth
 	r.Route("/api/auth", func(r chi.Router) {
 		r.Post("/login", authHandler.Login)
 		r.Post("/refresh", authHandler.Refresh)
 		r.Post("/logout", authHandler.Logout)
 	})
 
-	// 8. Route terproteksi untuk User (semua role bisa akses)
+	// 8. Route User (Search & Public Dosen List)
 	r.Route("/api/users", func(r chi.Router) {
 		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
-		// Pencarian user (NIM/NIDN/Nama/Email) — semua role bisa
-		r.Get("/search", academicHandler.SearchUsers)
-		// Daftar dosen untuk ditampilkan di halaman Cari User
-		r.Get("/dosen", academicHandler.GetAllDosen)
+		r.Get("/search", adminHandler.SearchUsers)
+		r.Get("/dosen", dosenHandler.GetAllDosen)
 	})
 
-	// 9. Route terproteksi khusus Admin
+	// 9. Route Admin
 	r.Route("/api/admin", func(r chi.Router) {
 		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
 		r.Use(middleware.RequireRole(model.RoleAdmin))
-		// Statistik untuk Dashboard Admin
-		r.Get("/stats", academicHandler.GetAdminStats)
-		// Kelola Mahasiswa
-		r.Get("/mahasiswa", academicHandler.GetAllMahasiswa)
-		r.Post("/mahasiswa", academicHandler.CreateMahasiswa)
-		// Kelola Dosen
-		r.Post("/dosen", academicHandler.CreateDosen)
+		
+		r.Get("/stats", adminHandler.GetAdminStats)
+		
+		// Mahasiswa
+		r.Get("/mahasiswa", mahasiswaHandler.GetAllMahasiswa)
+		r.Post("/mahasiswa", mahasiswaHandler.Create)
+		
+		// Dosen
+		r.Post("/dosen", dosenHandler.Create)
+		
+		// Mata Kuliah
+		r.Get("/mata-kuliah", adminHandler.GetAllMataKuliah)
+		r.Post("/mata-kuliah", adminHandler.CreateMataKuliah)
 	})
 
-	// 9. Jalankan server
+	// 10. Start Server
 	port := os.Getenv("APP_PORT")
 	logger.Info("Server starting", zap.String("port", port))
-
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		logger.Fatal("Server failed to start", zap.Error(err))
 	}
