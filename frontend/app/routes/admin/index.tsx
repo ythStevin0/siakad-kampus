@@ -1,6 +1,6 @@
 import { useOutletContext } from "react-router";
 import { useState, useEffect, type ReactNode } from "react";
-import { fetchAdminStats, type AdminStats } from "../lib/api";
+import { fetchAdminStats, type AdminStats } from "../../lib/api";
 
 type OutletContext = { user: { email: string; role: string; name: string } | null };
 

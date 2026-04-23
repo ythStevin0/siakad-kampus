@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { fetchAllMahasiswa, createMahasiswa, type Mahasiswa } from "../lib/api";
-import { Modal } from "../components/ui/Modal";
-import { InputField } from "../components/ui/InputField";
-import { SelectField } from "../components/ui/SelectField";
+import { fetchAllMahasiswa, createMahasiswa, type Mahasiswa } from "../../lib/api";
+import Modal from "../../components/ui/Modal";
+import InputField from "../../components/ui/InputField";
+import SelectField from "../../components/ui/SelectField";
 
 export default function AdminMahasiswa() {
   const [mahasiswaList, setMahasiswaList] = useState<Mahasiswa[]>([]);

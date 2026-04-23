@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useOutletContext } from "react-router";
-import { searchUsers, fetchAllDosen, type SearchResult, type Dosen } from "../lib/api";
+import { searchUsers, fetchAllDosen, type SearchResult, type Dosen } from "../../lib/api";
 
 type OutletContext = { user: { email: string; role: string; name: string } | null; roleLabel: string };
 
