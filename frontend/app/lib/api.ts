@@ -129,6 +129,21 @@ export async function createDosen(payload: Record<string, any>) {
   return res.data;
 }
 
+export async function updateDosen(id: string, payload: Record<string, any>) {
+  const res = await apiFetch(`/api/admin/dosen/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return res.data;
+}
+
+export async function deleteDosen(id: string) {
+  const res = await apiFetch(`/api/admin/dosen/${id}`, {
+    method: "DELETE",
+  });
+  return res.data;
+}
+
 // =============================================
 // DATA MATA KULIAH
 // =============================================

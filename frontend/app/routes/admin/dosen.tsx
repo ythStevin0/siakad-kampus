@@ -3,17 +3,20 @@ import { Plus, Search, Users, UserPlus, Mail, Building2, Trash2, Edit } from "lu
 import { InputField } from "../../components/ui/InputField";
 import { SelectField } from "../../components/ui/SelectField";
 import { Modal } from "../../components/ui/Modal";
-import { fetchAllDosen, createDosen, type Dosen } from "../../lib/api";
+import { fetchAllDosen, createDosen, updateDosen, deleteDosen, type Dosen } from "../../lib/api";
 
 export default function AdminDosen() {
   const [dosenList, setDosenList] = useState<Dosen[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Edit State
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -45,17 +48,64 @@ export default function AdminDosen() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openAddModal = () => {
+    setIsEditMode(false);
+    setEditingId(null);
+    setFormData({
+      nidn: "",
+      nama_lengkap: "",
+      gelar_depan: "",
+      gelar_belakang: "",
+      departemen: "",
+      password: "",
+    });
+    setError(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (d: Dosen) => {
+    setIsEditMode(true);
+    setEditingId(d.id);
+    setFormData({
+      nidn: d.nidn,
+      nama_lengkap: d.nama_lengkap,
+      gelar_depan: d.gelar_depan || "",
+      gelar_belakang: d.gelar_belakang || "",
+      departemen: d.departemen,
+      password: "", // Password dikosongi saat edit
+    });
+    setError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string, nama: string) => {
+    if (!confirm(`Hapus dosen: ${nama}?`)) return;
+    try {
+      await deleteDosen(id);
+      loadDosen();
+    } catch (err: any) {
+      alert("Gagal menghapus: " + err.message);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await createDosen({
+      const payload = {
         ...formData,
         gelar_depan: formData.gelar_depan || null,
         gelar_belakang: formData.gelar_belakang || null,
-      });
+      };
+      
+      if (isEditMode && editingId) {
+        await updateDosen(editingId, payload);
+      } else {
+        await createDosen(payload);
+      }
+      
       setIsModalOpen(false);
       setFormData({
         nidn: "",
@@ -104,7 +154,7 @@ export default function AdminDosen() {
           <p className="text-sm text-zinc-500 mt-1">Daftar dosen tetap dan tidak tetap UISI.</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAddModal}
           className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-600/20 text-sm font-medium"
         >
           <UserPlus className="w-4 h-4" />
@@ -184,10 +234,16 @@ export default function AdminDosen() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-zinc-100 transition-colors">
+                        <button 
+                          onClick={() => openEditModal(d)}
+                          className="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-zinc-100 transition-colors"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="p-2 hover:bg-red-500/10 rounded-lg text-zinc-500 hover:text-red-400 transition-colors">
+                        <button 
+                          onClick={() => handleDelete(d.id, d.nama_lengkap)}
+                          className="p-2 hover:bg-red-500/10 rounded-lg text-zinc-500 hover:text-red-400 transition-colors"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -210,9 +266,9 @@ export default function AdminDosen() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Daftarkan Dosen Baru"
+        title={isEditMode ? "Edit Data Dosen" : "Daftarkan Dosen Baru"}
       >
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField
               label="NIDN (10 Digit)"
@@ -221,6 +277,7 @@ export default function AdminDosen() {
               required
               value={formData.nidn}
               onChange={handleInputChange}
+              error={isEditMode ? "NIDN tidak dapat diubah" : undefined}
             />
             <InputField
               label="Nama Lengkap (Tanpa Gelar)"
@@ -266,21 +323,23 @@ export default function AdminDosen() {
             onChange={handleInputChange}
           />
 
-          <div className="space-y-2">
-            <InputField
-              label="Password Akun"
-              name="password"
-              type="password"
-              placeholder="Minimal 6 karakter"
-              required
-              value={formData.password}
-              onChange={handleInputChange}
-            />
-            <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800/50">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Preview Email Login</p>
-              <p className="text-sm text-indigo-400 font-mono mt-1">{getEmailPreview()}</p>
+          {!isEditMode && (
+            <div className="space-y-2">
+              <InputField
+                label="Password Akun"
+                name="password"
+                type="password"
+                placeholder="Minimal 6 karakter"
+                required={!isEditMode}
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800/50">
+                <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Preview Email Login</p>
+                <p className="text-sm text-indigo-400 font-mono mt-1">{getEmailPreview()}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
@@ -301,7 +360,7 @@ export default function AdminDosen() {
               disabled={isSubmitting}
               className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-indigo-600/20"
             >
-              {isSubmitting ? "Menyimpan..." : "Daftarkan Dosen"}
+              {isSubmitting ? "Menyimpan..." : (isEditMode ? "Simpan Perubahan" : "Daftarkan Dosen")}
             </button>
           </div>
         </form>

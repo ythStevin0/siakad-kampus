@@ -89,3 +89,24 @@ func (r *Repository) CreateTx(ctx context.Context, d *model.Dosen, hashedPasswor
 
 	return nil
 }
+
+func (r *Repository) Update(ctx context.Context, d *model.Dosen) error {
+	query := `
+		UPDATE dosen 
+		SET nama_lengkap = $1, gelar_depan = $2, gelar_belakang = $3, departemen = $4, updated_at = NOW()
+		WHERE id = $5
+	`
+	_, err := r.db.Exec(ctx, query, d.NamaLengkap, d.GelarDepan, d.GelarBelakang, d.Departemen, d.ID)
+	return database.ParsePgError(err)
+}
+
+func (r *Repository) Delete(ctx context.Context, id string) error {
+	var userID string
+	err := r.db.QueryRow(ctx, "SELECT user_id FROM dosen WHERE id = $1", id).Scan(&userID)
+	if err != nil {
+		return database.ParsePgError(err)
+	}
+
+	_, err = r.db.Exec(ctx, "DELETE FROM users WHERE id = $1", userID)
+	return database.ParsePgError(err)
+}

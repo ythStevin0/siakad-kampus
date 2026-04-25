@@ -29,8 +29,8 @@ func (s *Service) GetAll(ctx context.Context) ([]model.Dosen, error) {
 }
 
 func (s *Service) Create(ctx context.Context, d *model.Dosen, hashedPassword string) error {
-	if err := validateNIDN(d.NIDN); err != nil {
-		return err
+	if d.NIDN == "" {
+		return fmt.Errorf("NIDN tidak boleh kosong")
 	}
 	if d.NamaLengkap == "" {
 		return fmt.Errorf("nama lengkap tidak boleh kosong")
@@ -39,4 +39,18 @@ func (s *Service) Create(ctx context.Context, d *model.Dosen, hashedPassword str
 		return fmt.Errorf("departemen tidak boleh kosong")
 	}
 	return s.repo.CreateTx(ctx, d, hashedPassword)
+}
+
+func (s *Service) Update(ctx context.Context, d *model.Dosen) error {
+	if d.NamaLengkap == "" {
+		return fmt.Errorf("nama tidak boleh kosong")
+	}
+	return s.repo.Update(ctx, d)
+}
+
+func (s *Service) Delete(ctx context.Context, id string) error {
+	if id == "" {
+		return fmt.Errorf("ID tidak valid")
+	}
+	return s.repo.Delete(ctx, id)
 }

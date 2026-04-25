@@ -128,7 +128,10 @@ func main() {
 		r.Delete("/mahasiswa/{id}", mahasiswaHandler.Delete)
 
 		// Dosen
+		r.Get("/dosen", dosenHandler.GetAllDosen)
 		r.Post("/dosen", dosenHandler.Create)
+		r.Put("/dosen/{id}", dosenHandler.Update)
+		r.Delete("/dosen/{id}", dosenHandler.Delete)
 
 		// Mata Kuliah
 		r.Get("/mata-kuliah", adminHandler.GetAllMataKuliah)
