@@ -42,6 +42,11 @@ func main() {
 	}
 	defer db.Close()
 
+	// 3.1 Jalankan Migrasi Otomatis
+	if err := database.RunMigrations(db, logger); err != nil {
+		logger.Fatal("Failed to run migrations", zap.Error(err))
+	}
+
 	// 4. Init semua domain (Domain-Driven)
 
 	// Auth
