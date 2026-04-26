@@ -24,14 +24,13 @@ func NewHandler(service *Service, logger *zap.Logger) *Handler {
 
 // Create: Untuk Mahasiswa/Dosen mengirim pesan ke Admin
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	// Ambil ID pengirim dari context JWT
-	userIDStr, ok := r.Context().Value(middleware.UserIDKey).(string)
-	if !ok || userIDStr == "" {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized", "User ID not found in context")
+	userCtx := middleware.GetUserFromContext(r.Context())
+	if userCtx == nil {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
 		return
 	}
 
-	parsedID, err := uuid.Parse(userIDStr)
+	parsedID, err := uuid.Parse(userCtx.UserID)
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "Unauthorized", "Invalid User ID")
 		return

@@ -16,7 +16,6 @@ import (
 	"siakad/backend/internal/berita"
 	"siakad/backend/internal/dosen"
 	"siakad/backend/internal/mahasiswa"
-	"siakad/backend/internal/mata_kuliah"
 	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
 	"siakad/backend/internal/pesan"
@@ -70,16 +69,13 @@ func main() {
 	mahasiswaService := mahasiswa.NewService(mahasiswaRepo)
 	mahasiswaHandler := mahasiswa.NewHandler(mahasiswaService, logger)
 
-	// Mata Kuliah & Pesan
-	mataKuliahRepo := mata_kuliah.NewRepository(db)
-	mataKuliahService := mata_kuliah.NewService(mataKuliahRepo)
-
+	// Pesan
 	pesanRepo := pesan.NewRepository(db)
 	pesanService := pesan.NewService(pesanRepo)
 	pesanHandler := pesan.NewHandler(pesanService, logger)
 
 	// Admin Handler
-	adminHandler := admin.NewHandler(adminService, mahasiswaService, dosenService, mataKuliahService, logger)
+	adminHandler := admin.NewHandler(adminService, logger)
 
 	beritaRepo := berita.NewRepository(db)
 	beritaService := berita.NewService(beritaRepo)

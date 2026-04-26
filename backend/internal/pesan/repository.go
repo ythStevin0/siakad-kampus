@@ -31,9 +31,13 @@ func (r *Repository) GetAllForAdmin(ctx context.Context) ([]model.Pesan, error) 
 	query := `
 		SELECT 
 			p.id, p.user_id, p.isi_pesan, p.is_read, p.created_at,
-			u.name as pengirim_nama, u.email as pengirim_email, u.role as pengirim_role
+			COALESCE(m.nama_lengkap, d.nama_lengkap, 'Admin') as pengirim_nama, 
+			u.email as pengirim_email, 
+			u.role as pengirim_role
 		FROM pesan p
 		JOIN users u ON p.user_id = u.id
+		LEFT JOIN mahasiswa m ON u.id = m.user_id
+		LEFT JOIN dosen d ON u.id = d.user_id
 		ORDER BY p.created_at DESC
 	`
 	rows, err := r.db.Query(ctx, query)
