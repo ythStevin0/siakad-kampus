@@ -134,6 +134,8 @@ export default function DashboardLayout() {
   const [user, setUser] = useState<{ email: string; role: string; name: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [time, setTime] = useState(new Date());
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
 
   useEffect(() => {
     const stored = getUserFromStorage();
@@ -214,18 +216,54 @@ export default function DashboardLayout() {
           </button>
 
           {/* Profil */}
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm text-zinc-300"
-          >
-            <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
-            </div>
-            <span className="hidden sm:block max-w-[120px] truncate">{user?.name || user?.email}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm text-zinc-300"
+            >
+              <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300">
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <span className="hidden sm:block max-w-[120px] truncate">{user?.name || user?.email}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}>
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)}></div>
+                <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl overflow-hidden z-50">
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-300 hover:bg-white/5 transition-colors text-left border-b border-zinc-800"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      // Logika ubah password akan ditambahkan di sini
+                      alert("Fitur Ubah Password akan segera hadir!");
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                    </svg>
+                    Ubah Password
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors text-left"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -261,19 +299,98 @@ export default function DashboardLayout() {
             ))}
           </nav>
 
-          {/* Logout di bawah */}
-          <div className="px-2 pb-4">
+          {/* Send Message Button di bawah */}
+          <div className="p-4 mt-auto">
             <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-red-600/10 hover:text-red-400 transition-all duration-150"
+              onClick={() => setIsMessageOpen(!isMessageOpen)}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold text-white bg-[#1ea39e] hover:bg-[#188f88] transition-all duration-150 shadow-lg shadow-[#1ea39e]/20 ${!sidebarOpen ? "px-2" : "px-4"}`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
-              </svg>
-              <span className={`whitespace-nowrap ${sidebarOpen ? "opacity-100" : "opacity-0"}`}>Logout</span>
+              {!sidebarOpen && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+              )}
+              {sidebarOpen && <span>Send message</span>}
             </button>
           </div>
         </aside>
+
+        {/* Popup Chat Box - Tertuju Admin */}
+        {isMessageOpen && (
+          <div className="fixed bottom-0 left-0 sm:left-52 z-50 w-full sm:w-[350px] bg-[#1ea39e] sm:rounded-t-2xl shadow-2xl transition-all" style={{ bottom: 0 }}>
+            {/* Header / Tombol Close */}
+            <div className="flex justify-end p-3 pb-1">
+              <button onClick={() => setIsMessageOpen(false)} className="text-white hover:text-white/80 transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            {/* Body / Card Form */}
+            <div className="bg-white m-3 mt-0 p-5 rounded-xl shadow-sm">
+              <form 
+                className="space-y-4" 
+                onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  alert("Pesan Anda telah dikirim ke Admin!"); 
+                  setIsMessageOpen(false); 
+                }}
+              >
+                
+                {/* Input Nama (Readonly) */}
+                <div className="relative mt-2">
+                  <label className="absolute -top-2.5 left-3 bg-white px-1 text-[11px] text-zinc-700 font-medium z-10 flex gap-1">
+                    <span className="text-red-500">*</span> Nama
+                  </label>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={user?.name || ""} 
+                    className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-800 bg-white focus:outline-none" 
+                  />
+                </div>
+
+                {/* Input Email (Readonly) */}
+                <div className="relative mt-4">
+                  <label className="absolute -top-2.5 left-3 bg-white px-1 text-[11px] text-zinc-700 font-medium z-10 flex gap-1">
+                    <span className="text-red-500">*</span> Email
+                  </label>
+                  <input 
+                    type="email" 
+                    readOnly 
+                    value={user?.email || ""} 
+                    className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-800 bg-white focus:outline-none" 
+                  />
+                </div>
+
+                {/* Input Pesan */}
+                <div className="relative mt-4 mb-2">
+                  <label className="absolute -top-2.5 left-3 bg-white px-1 text-[11px] text-zinc-700 font-medium z-10 flex gap-1">
+                    <span className="text-red-500">*</span> Pesan
+                  </label>
+                  <textarea 
+                    required 
+                    rows={4} 
+                    className="w-full border border-zinc-200 rounded-lg px-3 py-3 text-sm text-zinc-800 focus:outline-none focus:border-[#1ea39e] transition-colors resize-none"
+                  ></textarea>
+                </div>
+
+                {/* Tombol Kirim */}
+                <button 
+                  type="submit" 
+                  className="w-full mt-2 bg-[#1ea39e] hover:bg-[#188f88] text-white py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+                  </svg>
+                  Kirim
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Konten Utama */}
         <main className="flex-1 overflow-auto">
