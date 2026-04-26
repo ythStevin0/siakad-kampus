@@ -16,8 +16,10 @@ import (
 	"siakad/backend/internal/berita"
 	"siakad/backend/internal/dosen"
 	"siakad/backend/internal/mahasiswa"
+	"siakad/backend/internal/mata_kuliah"
 	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
+	"siakad/backend/internal/pesan"
 	"siakad/backend/pkg/database"
 	"siakad/backend/pkg/response"
 )
@@ -57,7 +59,6 @@ func main() {
 	// Admin (Stats, MK, Search)
 	adminRepo := admin.NewRepository(db)
 	adminService := admin.NewService(adminRepo)
-	adminHandler := admin.NewHandler(adminService, logger)
 
 	// Dosen
 	dosenRepo := dosen.NewRepository(db)
@@ -68,6 +69,17 @@ func main() {
 	mahasiswaRepo := mahasiswa.NewRepository(db)
 	mahasiswaService := mahasiswa.NewService(mahasiswaRepo)
 	mahasiswaHandler := mahasiswa.NewHandler(mahasiswaService, logger)
+
+	// Mata Kuliah & Pesan
+	mataKuliahRepo := mata_kuliah.NewRepository(db)
+	mataKuliahService := mata_kuliah.NewService(mataKuliahRepo)
+
+	pesanRepo := pesan.NewRepository(db)
+	pesanService := pesan.NewService(pesanRepo)
+	pesanHandler := pesan.NewHandler(pesanService, logger)
+
+	// Admin Handler
+	adminHandler := admin.NewHandler(adminService, mahasiswaService, dosenService, mataKuliahService, logger)
 
 	beritaRepo := berita.NewRepository(db)
 	beritaService := berita.NewService(beritaRepo)
@@ -136,6 +148,10 @@ func main() {
 		// Mata Kuliah
 		r.Get("/mata-kuliah", adminHandler.GetAllMataKuliah)
 		r.Post("/mata-kuliah", adminHandler.CreateMataKuliah)
+
+		// Pesan Masuk (Kotak Masuk Admin)
+		r.Get("/pesan", pesanHandler.GetAllForAdmin)
+		r.Put("/pesan/{id}/read", pesanHandler.MarkAsRead)
 	})
 
 	// 9. Berita Routes (Public & Admin)
@@ -144,6 +160,9 @@ func main() {
 		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
 		r.Post("/api/admin/berita", beritaHandler.Create)
 		r.Delete("/api/admin/berita/{id}", beritaHandler.Delete)
+		
+		// Endpoint Pesan (Untuk Mahasiswa/Dosen/Admin ngirim pesan)
+		r.Post("/api/pesan", pesanHandler.Create)
 	})
 
 	// 10. Start Server
