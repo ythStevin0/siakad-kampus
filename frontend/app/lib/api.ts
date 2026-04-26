@@ -79,6 +79,29 @@ export async function fetchAllDosen(): Promise<Dosen[]> {
 }
 
 // =============================================
+// PESAN (MESSAGES)
+// =============================================
+export async function kirimPesan(isi_pesan: string) {
+  const res = await apiFetch("/api/pesan", {
+    method: "POST",
+    body: JSON.stringify({ isi_pesan }),
+  });
+  return res.data;
+}
+
+export async function fetchAdminPesan() {
+  const res = await apiFetch("/api/admin/pesan");
+  return res.data;
+}
+
+export async function markPesanAsRead(id: string) {
+  const res = await apiFetch(`/api/admin/pesan/${id}/read`, {
+    method: "PUT",
+  });
+  return res.data;
+}
+
+// =============================================
 // DATA MAHASISWA (untuk Admin - Kelola Mahasiswa)
 // =============================================
 export interface Mahasiswa {
