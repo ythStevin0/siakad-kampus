@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router";
 import { useState, useEffect, type ReactNode } from "react";
 import { logout, getAccessToken } from "../lib/auth";
+import { kirimPesan } from "../lib/api";
 
 // Tipe untuk data user dari JWT (nanti akan diambil dari context/state)
 // Sementara kita parse manual dari localStorage sebagai simulasi
@@ -136,6 +137,8 @@ export default function DashboardLayout() {
   const [time, setTime] = useState(new Date());
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isMessageOpen, setIsMessageOpen] = useState(false);
+  const [pesanText, setPesanText] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   useEffect(() => {
     const stored = getUserFromStorage();
@@ -332,10 +335,21 @@ export default function DashboardLayout() {
             <div className="bg-white m-3 mt-0 p-5 rounded-xl shadow-sm">
               <form 
                 className="space-y-4" 
-                onSubmit={(e) => { 
-                  e.preventDefault(); 
-                  alert("Pesan Anda telah dikirim ke Admin!"); 
-                  setIsMessageOpen(false); 
+                onSubmit={async (e) => { 
+                  e.preventDefault();
+                  if (!pesanText.trim()) return;
+                  
+                  setIsSendingMessage(true);
+                  try {
+                    await kirimPesan(pesanText);
+                    alert("Pesan Anda telah dikirim ke Admin!");
+                    setPesanText("");
+                    setIsMessageOpen(false); 
+                  } catch (err: any) {
+                    alert("Gagal mengirim pesan: " + err.message);
+                  } finally {
+                    setIsSendingMessage(false);
+                  }
                 }}
               >
                 
@@ -373,6 +387,8 @@ export default function DashboardLayout() {
                   <textarea 
                     required 
                     rows={4} 
+                    value={pesanText}
+                    onChange={(e) => setPesanText(e.target.value)}
                     className="w-full border border-zinc-200 rounded-lg px-3 py-3 text-sm text-zinc-800 focus:outline-none focus:border-[#1ea39e] transition-colors resize-none"
                   ></textarea>
                 </div>
@@ -380,12 +396,13 @@ export default function DashboardLayout() {
                 {/* Tombol Kirim */}
                 <button 
                   type="submit" 
-                  className="w-full mt-2 bg-[#1ea39e] hover:bg-[#188f88] text-white py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors"
+                  disabled={isSendingMessage}
+                  className="w-full mt-2 bg-[#1ea39e] hover:bg-[#188f88] disabled:bg-[#1ea39e]/50 text-white py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
                   </svg>
-                  Kirim
+                  {isSendingMessage ? "Mengirim..." : "Kirim"}
                 </button>
               </form>
             </div>
