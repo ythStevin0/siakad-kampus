@@ -113,9 +113,13 @@ func main() {
 		r.Post("/login", authHandler.Login)
 		r.Post("/refresh", authHandler.Refresh)
 		r.Post("/logout", authHandler.Logout)
-		
-		// Protected Auth Route
-		r.With(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger)).Post("/change-password", authHandler.ChangePassword)
+
+		// Protected Auth Routes (membutuhkan login)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+			r.Post("/change-password", authHandler.ChangePassword)
+			r.Get("/password-history", authHandler.GetPasswordHistory)
+		})
 	})
 
 	// 8. Route User (Search & Public Dosen List)

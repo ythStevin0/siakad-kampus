@@ -95,3 +95,27 @@ export const changePassword = async (oldPassword: string, newPassword: string) =
 
   return result;
 };
+
+export const getPasswordHistory = async () => {
+  const token = getAccessToken();
+  if (!token) throw new Error("Tidak ada akses. Silakan login kembali.");
+
+  const res = await fetch("http://localhost:8080/api/auth/password-history", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await res.json();
+  if (!res.ok) {
+    throw new Error(result.error || "Gagal mengambil riwayat password");
+  }
+
+  return result.data as Array<{
+    id: string;
+    ip_address: string;
+    info: string;
+    created_at: string;
+  }>;
+};

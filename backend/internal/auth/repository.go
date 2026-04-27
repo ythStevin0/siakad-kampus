@@ -126,3 +126,42 @@ func (r *AuthRepository) UpdatePassword(ctx context.Context, userID string, newH
 	}
 	return nil
 }
+
+// SavePasswordHistory menyimpan riwayat perubahan password
+func (r *AuthRepository) SavePasswordHistory(ctx context.Context, history *model.PasswordHistory) error {
+	query := `
+		INSERT INTO password_histories (user_id, ip_address, info)
+		VALUES ($1, $2, $3)
+	`
+	_, err := r.db.Exec(ctx, query, history.UserID, history.IPAddress, history.Info)
+	if err != nil {
+		return fmt.Errorf("failed to save password history: %w", err)
+	}
+	return nil
+}
+
+// GetPasswordHistory mengambil riwayat perubahan password (limit 5)
+func (r *AuthRepository) GetPasswordHistory(ctx context.Context, userID string) ([]model.PasswordHistory, error) {
+	query := `
+		SELECT id, user_id, ip_address, info, created_at
+		FROM password_histories
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT 5
+	`
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch password history: %w", err)
+	}
+	defer rows.Close()
+
+	var histories []model.PasswordHistory
+	for rows.Next() {
+		var h model.PasswordHistory
+		if err := rows.Scan(&h.ID, &h.UserID, &h.IPAddress, &h.Info, &h.CreatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan password history: %w", err)
+		}
+		histories = append(histories, h)
+	}
+	return histories, nil
+}

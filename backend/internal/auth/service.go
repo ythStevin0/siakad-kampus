@@ -222,10 +222,18 @@ func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
 	return s.repo.RevokeRefreshToken(ctx, refreshToken)
 }
 
-// ChangePassword memvalidasi password lama dan mengganti dengan password baru
-func (s *AuthService) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
+// validateChangePasswordInputs memvalidasi bahwa input tidak kosong (SRP)
+func validateChangePasswordInputs(oldPassword, newPassword string) error {
 	if oldPassword == "" || newPassword == "" {
 		return fmt.Errorf("password lama dan password baru tidak boleh kosong")
+	}
+	return nil
+}
+
+// ChangePassword memvalidasi password lama dan mengganti dengan password baru
+func (s *AuthService) ChangePassword(ctx context.Context, userID, oldPassword, newPassword, ipAddress string) error {
+	if err := validateChangePasswordInputs(oldPassword, newPassword); err != nil {
+		return err
 	}
 
 	user, err := s.repo.FindUserByID(ctx, userID)
@@ -245,5 +253,20 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID, oldPassword, n
 	}
 
 	// Simpan ke database
-	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
+	if err := s.repo.UpdatePassword(ctx, userID, string(hashedPassword)); err != nil {
+		return err
+	}
+
+	// Simpan riwayat
+	history := &model.PasswordHistory{
+		UserID:    userID,
+		IPAddress: ipAddress,
+		Info:      "[PIN] User Create New PIN",
+	}
+	return s.repo.SavePasswordHistory(ctx, history)
+}
+
+// GetPasswordHistory mengambil riwayat perubahan password
+func (s *AuthService) GetPasswordHistory(ctx context.Context, userID string) ([]model.PasswordHistory, error) {
+	return s.repo.GetPasswordHistory(ctx, userID)
 }

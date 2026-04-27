@@ -120,7 +120,12 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.ChangePassword(r.Context(), userCtx.UserID, req.OldPassword, req.NewPassword); err != nil {
+	ipAddress := r.Header.Get("X-Forwarded-For")
+	if ipAddress == "" {
+		ipAddress = r.RemoteAddr
+	}
+
+	if err := h.service.ChangePassword(r.Context(), userCtx.UserID, req.OldPassword, req.NewPassword, ipAddress); err != nil {
 		h.logger.Warn("Failed to change password", zap.String("userID", userCtx.UserID), zap.Error(err))
 		response.Error(w, http.StatusBadRequest, "Gagal mengganti password", err.Error())
 		return
@@ -128,4 +133,22 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info("Password changed successfully", zap.String("userID", userCtx.UserID))
 	response.Success(w, http.StatusOK, "Password berhasil diubah", nil)
+}
+
+// GetPasswordHistory menangani GET /api/auth/password-history
+func (h *AuthHandler) GetPasswordHistory(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.GetUserFromContext(r.Context())
+	if userCtx == nil {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
+		return
+	}
+
+	histories, err := h.service.GetPasswordHistory(r.Context(), userCtx.UserID)
+	if err != nil {
+		h.logger.Warn("Failed to fetch password history", zap.String("userID", userCtx.UserID), zap.Error(err))
+		response.Error(w, http.StatusInternalServerError, "Gagal mengambil riwayat password", err.Error())
+		return
+	}
+
+	response.Success(w, http.StatusOK, "Riwayat password berhasil diambil", histories)
 }
