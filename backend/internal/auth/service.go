@@ -221,3 +221,29 @@ func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken strin
 func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
 	return s.repo.RevokeRefreshToken(ctx, refreshToken)
 }
+
+// ChangePassword memvalidasi password lama dan mengganti dengan password baru
+func (s *AuthService) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
+	if oldPassword == "" || newPassword == "" {
+		return fmt.Errorf("password lama dan password baru tidak boleh kosong")
+	}
+
+	user, err := s.repo.FindUserByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user tidak ditemukan")
+	}
+
+	// Validasi password lama
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+		return fmt.Errorf("password lama salah")
+	}
+
+	// Hash password baru
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("gagal mengamankan password baru")
+	}
+
+	// Simpan ke database
+	return s.repo.UpdatePassword(ctx, userID, string(hashedPassword))
+}

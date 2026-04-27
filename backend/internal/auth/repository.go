@@ -112,3 +112,17 @@ func (r *AuthRepository) RevokeRefreshToken(ctx context.Context, token string) e
 	}
 	return nil
 }
+
+// UpdatePassword memperbarui password user
+func (r *AuthRepository) UpdatePassword(ctx context.Context, userID string, newHashedPassword string) error {
+	query := `
+		UPDATE users
+		SET password = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+	_, err := r.db.Exec(ctx, query, newHashedPassword, userID)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	return nil
+}

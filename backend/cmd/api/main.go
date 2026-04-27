@@ -113,6 +113,9 @@ func main() {
 		r.Post("/login", authHandler.Login)
 		r.Post("/refresh", authHandler.Refresh)
 		r.Post("/logout", authHandler.Logout)
+		
+		// Protected Auth Route
+		r.With(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger)).Post("/change-password", authHandler.ChangePassword)
 	})
 
 	// 8. Route User (Search & Public Dosen List)

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"siakad/backend/pkg/response"
+	"siakad/backend/internal/middleware"
 
 	"go.uber.org/zap"
 )
@@ -97,4 +98,34 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info("Logout success")
 	response.Success(w, http.StatusOK, "Logout berhasil", nil)
+}
+
+// ChangePasswordRequest adalah payload untuk ganti password
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}
+
+// ChangePassword menangani POST /api/auth/change-password
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.GetUserFromContext(r.Context())
+	if userCtx == nil {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
+		return
+	}
+
+	var req ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "Format request tidak valid", err.Error())
+		return
+	}
+
+	if err := h.service.ChangePassword(r.Context(), userCtx.UserID, req.OldPassword, req.NewPassword); err != nil {
+		h.logger.Warn("Failed to change password", zap.String("userID", userCtx.UserID), zap.Error(err))
+		response.Error(w, http.StatusBadRequest, "Gagal mengganti password", err.Error())
+		return
+	}
+
+	h.logger.Info("Password changed successfully", zap.String("userID", userCtx.UserID))
+	response.Success(w, http.StatusOK, "Password berhasil diubah", nil)
 }

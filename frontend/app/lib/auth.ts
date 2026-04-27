@@ -74,3 +74,24 @@ export const logout = async () => {
     console.error("Logout gagal", err);
   }
 };
+
+export const changePassword = async (oldPassword: string, newPassword: string) => {
+  const token = getAccessToken();
+  if (!token) throw new Error("Tidak ada akses. Silakan login kembali.");
+
+  const res = await fetch("http://localhost:8080/api/auth/change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+  });
+
+  const result = await res.json();
+  if (!res.ok) {
+    throw new Error(result.error || "Gagal mengubah password");
+  }
+
+  return result;
+};
