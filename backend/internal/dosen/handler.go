@@ -1,9 +1,11 @@
 package dosen
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
 	"siakad/backend/pkg/response"
 
@@ -14,20 +16,50 @@ import (
 )
 
 type Handler struct {
-	service *Service
-	logger  *zap.Logger
+	service          *Service
+	mahasiswaService interface {
+		GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error)
+	}
+	logger *zap.Logger
 }
 
-func NewHandler(service *Service, logger *zap.Logger) *Handler {
+func NewHandler(service *Service, mahasiswaService interface {
+	GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error)
+}, logger *zap.Logger) *Handler {
 	return &Handler{
-		service: service,
-		logger:  logger,
+		service:          service,
+		mahasiswaService: mahasiswaService,
+		logger:           logger,
 	}
 }
 
-// GetAllDosen — GET /api/users/dosen (atau sesuai routing baru)
+// GetAllDosen — GET /api/users/dosen
 func (h *Handler) GetAllDosen(w http.ResponseWriter, r *http.Request) {
-	list, err := h.service.GetAll(r.Context())
+	userCtx := middleware.GetUserFromContext(r.Context())
+	if userCtx == nil {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized", "User not found in context")
+		return
+	}
+
+	var list []model.Dosen
+	var err error
+
+	// Jika role adalah mahasiswa, filter berdasarkan departemen sesuai prodi mahasiswa
+	if userCtx.Role == model.RoleMahasiswa {
+		m, errM := h.mahasiswaService.GetByUserID(r.Context(), userCtx.UserID)
+		if errM != nil {
+			h.logger.Error("Failed to get mahasiswa profile for filtering", zap.String("userID", userCtx.UserID), zap.Error(errM))
+			// Fallback ke semua dosen atau kirim error? User minta "harus menyesuaikan"
+			// Kita ambil semua dosen saja jika profil mahasiswa tidak ditemukan (untuk keamanan tampilan)
+			list, err = h.service.GetAll(r.Context())
+		} else {
+			list, err = h.service.GetByDepartemen(r.Context(), m.ProgramStudi)
+		}
+	} else {
+		// Untuk admin atau role lain, ambil semua dosen
+		list, err = h.service.GetAll(r.Context())
+	}
+
 	if err != nil {
 		h.logger.Error("Failed to get dosen list", zap.Error(err))
 		response.Error(w, http.StatusInternalServerError, "Gagal mengambil data dosen", err.Error())

@@ -28,6 +28,10 @@ func (s *Service) GetAll(ctx context.Context) ([]model.Dosen, error) {
 	return s.repo.GetAll(ctx)
 }
 
+func (s *Service) GetByDepartemen(ctx context.Context, departemen string) ([]model.Dosen, error) {
+	return s.repo.GetByDepartemen(ctx, departemen)
+}
+
 func (s *Service) Create(ctx context.Context, d *model.Dosen, hashedPassword string) error {
 	if d.NIDN == "" {
 		return fmt.Errorf("NIDN tidak boleh kosong")

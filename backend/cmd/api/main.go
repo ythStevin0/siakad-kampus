@@ -59,15 +59,15 @@ func main() {
 	adminRepo := admin.NewRepository(db)
 	adminService := admin.NewService(adminRepo)
 
-	// Dosen
-	dosenRepo := dosen.NewRepository(db)
-	dosenService := dosen.NewService(dosenRepo)
-	dosenHandler := dosen.NewHandler(dosenService, logger)
-
 	// Mahasiswa
 	mahasiswaRepo := mahasiswa.NewRepository(db)
 	mahasiswaService := mahasiswa.NewService(mahasiswaRepo)
 	mahasiswaHandler := mahasiswa.NewHandler(mahasiswaService, logger)
+
+	// Dosen
+	dosenRepo := dosen.NewRepository(db)
+	dosenService := dosen.NewService(dosenRepo)
+	dosenHandler := dosen.NewHandler(dosenService, mahasiswaService, logger)
 
 	// Pesan
 	pesanRepo := pesan.NewRepository(db)

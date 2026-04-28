@@ -110,3 +110,36 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	_, err = r.db.Exec(ctx, "DELETE FROM users WHERE id = $1", userID)
 	return database.ParsePgError(err)
 }
+
+func (r *Repository) GetByDepartemen(ctx context.Context, departemen string) ([]model.Dosen, error) {
+	query := `
+		SELECT id, user_id, nidn, nama_lengkap, gelar_depan, gelar_belakang, departemen, created_at, updated_at
+		FROM dosen
+		WHERE departemen ILIKE $1 
+		   OR $1 ILIKE '%' || departemen || '%'
+		   OR (departemen = 'DKV' AND $2 = 'Desain Komunikasi Visual')
+		   OR (departemen = 'Desain Komunikasi Visual' AND $2 = 'DKV')
+		ORDER BY nama_lengkap ASC
+	`
+	// Gunakan % agar bisa mencocokkan sebagian (misal Informatika di Teknik Informatika)
+	searchTerm := "%" + departemen + "%"
+	rows, err := r.db.Query(ctx, query, searchTerm, departemen)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query dosen by departemen: %w", err)
+	}
+	defer rows.Close()
+
+	list := make([]model.Dosen, 0)
+	for rows.Next() {
+		var d model.Dosen
+		if err := rows.Scan(
+			&d.ID, &d.UserID, &d.NIDN, &d.NamaLengkap,
+			&d.GelarDepan, &d.GelarBelakang, &d.Departemen,
+			&d.CreatedAt, &d.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan dosen: %w", err)
+		}
+		list = append(list, d)
+	}
+	return list, nil
+}

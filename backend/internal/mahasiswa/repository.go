@@ -114,3 +114,23 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	_, err = r.db.Exec(ctx, "DELETE FROM users WHERE id = $1", userID)
 	return database.ParsePgError(err)
 }
+
+func (r *Repository) GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error) {
+	query := `
+		SELECT id, user_id, nim, nama_lengkap, program_studi, angkatan, jalur_masuk, 
+		       status_ukt, status_bip, izin_krs, created_at, updated_at
+		FROM mahasiswa
+		WHERE user_id = $1
+	`
+	var m model.Mahasiswa
+	err := r.db.QueryRow(ctx, query, userID).Scan(
+		&m.ID, &m.UserID, &m.NIM, &m.NamaLengkap,
+		&m.ProgramStudi, &m.Angkatan, &m.JalurMasuk,
+		&m.StatusUKT, &m.StatusBIP, &m.IzinKRS,
+		&m.CreatedAt, &m.UpdatedAt,
+	)
+	if err != nil {
+		return nil, database.ParsePgError(err)
+	}
+	return &m, nil
+}
