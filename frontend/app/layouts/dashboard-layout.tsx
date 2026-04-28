@@ -360,7 +360,10 @@ export default function DashboardLayout() {
 
         {/* Popup Chat Box - Tertuju Admin */}
         {isMessageOpen && (
-          <div className="fixed bottom-0 left-0 sm:left-52 z-50 w-full sm:w-[350px] bg-[#1ea39e] sm:rounded-t-2xl shadow-2xl transition-all" style={{ bottom: 0 }}>
+          <div 
+            className={`fixed bottom-0 z-50 w-full sm:w-[350px] bg-[#1ea39e] sm:rounded-t-2xl shadow-2xl transition-all duration-300 ease-in-out left-0 ${sidebarOpen ? "sm:left-52" : "sm:left-0 lg:left-14"}`} 
+            style={{ bottom: 0 }}
+          >
             {/* Header / Tombol Close */}
             <div className="flex justify-end p-3 pb-1">
               <button onClick={() => setIsMessageOpen(false)} className="text-white hover:text-white/80 transition-colors">
