@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"siakad/backend/internal/admin"
+	"siakad/backend/internal/akademik"
 	"siakad/backend/internal/auth"
 	"siakad/backend/internal/berita"
 	"siakad/backend/internal/dosen"
@@ -80,6 +81,11 @@ func main() {
 	beritaRepo := berita.NewRepository(db)
 	beritaService := berita.NewService(beritaRepo)
 	beritaHandler := berita.NewHandler(beritaService, logger)
+
+	// Akademik (Kelas, KRS)
+	akademikRepo := akademik.NewRepository(db)
+	akademikService := akademik.NewService(akademikRepo, mahasiswaRepo)
+	akademikHandler := akademik.NewHandler(akademikService)
 
 	// 5. Init router
 	r := chi.NewRouter()
@@ -168,7 +174,17 @@ func main() {
 		r.Post("/api/pesan", pesanHandler.Create)
 	})
 
-	// 10. Start Server
+	// 10. Route Akademik (KRS)
+	r.Route("/api/akademik", func(r chi.Router) {
+		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+
+		r.Get("/kelas/tersedia", akademikHandler.GetAvailableKelas)
+		r.Get("/krs", akademikHandler.GetKRS)
+		r.Post("/krs/ambil", akademikHandler.EnrollKelas)
+		r.Delete("/krs/batal/{id}", akademikHandler.DropKelas)
+	})
+
+	// 11. Start Server
 	port := os.Getenv("APP_PORT")
 	logger.Info("Server starting", zap.String("port", port))
 	if err := http.ListenAndServe(":"+port, r); err != nil {

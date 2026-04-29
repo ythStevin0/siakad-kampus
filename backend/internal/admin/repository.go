@@ -75,11 +75,11 @@ func (r *Repository) SearchUsers(ctx context.Context, q string) ([]SearchResult,
 
 func (r *Repository) CreateMataKuliah(ctx context.Context, mk *model.MataKuliah) error {
 	query := `
-		INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, semester)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO mata_kuliah (kode_mk, nama_mk, sks, semester, program_studi)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at
 	`
-	err := r.db.QueryRow(ctx, query, mk.KodeMK, mk.NamaMK, mk.SKS, mk.Semester).
+	err := r.db.QueryRow(ctx, query, mk.KodeMK, mk.NamaMK, mk.SKS, mk.Semester, mk.ProgramStudi).
 		Scan(&mk.ID, &mk.CreatedAt, &mk.UpdatedAt)
 	if err != nil {
 		return database.ParsePgError(err)
@@ -89,7 +89,7 @@ func (r *Repository) CreateMataKuliah(ctx context.Context, mk *model.MataKuliah)
 
 func (r *Repository) GetAllMataKuliah(ctx context.Context) ([]model.MataKuliah, error) {
 	query := `
-		SELECT id, kode_mk, nama_mk, sks, semester, created_at, updated_at
+		SELECT id, kode_mk, nama_mk, sks, semester, program_studi, created_at, updated_at
 		FROM mata_kuliah
 		ORDER BY semester ASC, kode_mk ASC
 	`
@@ -102,7 +102,7 @@ func (r *Repository) GetAllMataKuliah(ctx context.Context) ([]model.MataKuliah, 
 	list := make([]model.MataKuliah, 0)
 	for rows.Next() {
 		var mk model.MataKuliah
-		if err := rows.Scan(&mk.ID, &mk.KodeMK, &mk.NamaMK, &mk.SKS, &mk.Semester, &mk.CreatedAt, &mk.UpdatedAt); err != nil {
+		if err := rows.Scan(&mk.ID, &mk.KodeMK, &mk.NamaMK, &mk.SKS, &mk.Semester, &mk.ProgramStudi, &mk.CreatedAt, &mk.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan mata kuliah: %w", err)
 		}
 		list = append(list, mk)
