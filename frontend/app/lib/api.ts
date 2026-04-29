@@ -176,6 +176,7 @@ export interface MataKuliah {
   nama_mk: string;
   sks: number;
   semester: number;
+  program_studi: string;
 }
 
 export async function fetchAllMataKuliah(): Promise<MataKuliah[]> {
@@ -217,6 +218,66 @@ export async function createBerita(payload: Record<string, any>) {
 
 export async function deleteBerita(id: string) {
   const res = await apiFetch(`/api/admin/berita/${id}`, {
+    method: "DELETE",
+  });
+  return res.data;
+}
+
+// =============================================
+// AKADEMIK (KRS & KELAS)
+// =============================================
+export interface Kelas {
+  id: string;
+  mata_kuliah_id: string;
+  dosen_id: string;
+  kode_kelas: string;
+  hari: string;
+  jam_mulai: string;
+  jam_selesai: string;
+  ruangan: string;
+  kapasitas: number;
+  terisi: number;
+  semester_akademik: string;
+  nama_mata_kuliah: string;
+  nama_dosen: string;
+  sks: number;
+}
+
+export interface KRS {
+  id: string;
+  mahasiswa_id: string;
+  kelas_id: string;
+  semester_akademik: string;
+  status: "pending" | "disetujui" | "ditolak";
+  nama_mata_kuliah: string;
+  kode_kelas: string;
+  sks: number;
+  hari: string;
+  jam_mulai: string;
+  jam_selesai: string;
+  nama_dosen: string;
+}
+
+export async function fetchAvailableKelas(semester: string = "Ganjil 2024/2025"): Promise<Kelas[]> {
+  const res = await apiFetch(`/api/akademik/kelas/tersedia?semester=${encodeURIComponent(semester)}`);
+  return (res.data as Kelas[]) || [];
+}
+
+export async function fetchKRS(semester: string = "Ganjil 2024/2025"): Promise<KRS[]> {
+  const res = await apiFetch(`/api/akademik/krs?semester=${encodeURIComponent(semester)}`);
+  return (res.data as KRS[]) || [];
+}
+
+export async function enrollKelas(kelasId: string, semester: string) {
+  const res = await apiFetch("/api/akademik/krs/ambil", {
+    method: "POST",
+    body: JSON.stringify({ kelas_id: kelasId, semester }),
+  });
+  return res.data;
+}
+
+export async function dropKelas(krsId: string) {
+  const res = await apiFetch(`/api/akademik/krs/batal/${krsId}`, {
     method: "DELETE",
   });
   return res.data;
