@@ -89,6 +89,18 @@ const appCards: AppCard[] = [
     color: "from-cyan-600/30 to-cyan-900/20 border-cyan-600/30 hover:border-cyan-500/50",
     iconColor: "text-cyan-400",
   },
+  {
+    id: "uisipay",
+    label: "UISI Pay (Pembayaran)",
+    to: "/dashboard/uisi-pay",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><line x1="7" x2="7.01" y1="15" y2="15"/><line x1="11" x2="11.01" y1="15" y2="15"/>
+      </svg>
+    ),
+    color: "from-amber-500/30 to-amber-900/20 border-amber-500/30 hover:border-amber-400/50",
+    iconColor: "text-amber-400",
+  },
 ];
 
 export default function LayananGrid() {

@@ -9,6 +9,7 @@ export default [
     index("routes/mahasiswa/index.tsx"),
     route("cari-user", "routes/mahasiswa/cari-user.tsx"),
     route("jadwal", "routes/mahasiswa/jadwal.tsx"),
+    route("uisi-pay", "routes/mahasiswa/uisi-pay.tsx"),
     // Placeholder routes (can be moved to folder later as they are implemented)
     route("krs", "routes/dashboard.krs.tsx"),
     route("persetujuan-krs", "routes/dashboard.persetujuan-krs.tsx"),
