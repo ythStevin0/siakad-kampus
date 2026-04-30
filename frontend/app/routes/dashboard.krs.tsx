@@ -1,3 +1,4 @@
+// KRS Dashboard - Verified fixed JSX syntax and stray characters
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router";
 import { 
