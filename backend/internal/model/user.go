@@ -35,3 +35,12 @@ type RefreshToken struct {
 	IsRevoked bool      `db:"is_revoked"`
 	CreatedAt time.Time `db:"created_at"`
 }
+
+// PasswordHistory merepresentasikan riwayat ganti password
+type PasswordHistory struct {
+	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"user_id" db:"user_id"`
+	IPAddress string    `json:"ip_address" db:"ip_address"`
+	Info      string    `json:"info" db:"info"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
