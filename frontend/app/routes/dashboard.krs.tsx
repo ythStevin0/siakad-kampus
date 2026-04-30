@@ -8,7 +8,7 @@ import {
   dropKelas, 
   type Kelas, 
   type KRS 
-} from "~/lib/api";
+} from "../lib/api";
 
 interface OutletContext {
   user: { email: string; role: string; name: string } | null;

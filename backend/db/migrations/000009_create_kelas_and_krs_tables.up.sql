@@ -1,6 +1,6 @@
 -- Tabel kelas: merepresentasikan satu sesi perkuliahan dari sebuah mata kuliah
 -- Satu mata kuliah bisa punya banyak kelas (kelas A, B, C, dll)
-CREATE TABLE kelas (
+CREATE TABLE IF NOT EXISTS kelas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- Relasi ke mata kuliah yang diajarkan di kelas ini
@@ -29,7 +29,7 @@ CREATE TABLE kelas (
 
 -- Tabel krs: merepresentasikan rencana studi mahasiswa per semester
 -- Satu baris = mahasiswa mendaftar ke satu kelas tertentu
-CREATE TABLE krs (
+CREATE TABLE IF NOT EXISTS krs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- Mahasiswa yang mengambil kelas ini
@@ -56,9 +56,9 @@ CREATE TABLE krs (
 );
 
 -- Index untuk mempercepat query "tampilkan KRS mahasiswa X semester ini"
-CREATE INDEX idx_kelas_mata_kuliah ON kelas(mata_kuliah_id);
-CREATE INDEX idx_kelas_dosen ON kelas(dosen_id);
-CREATE INDEX idx_kelas_semester ON kelas(semester_akademik);
-CREATE INDEX idx_krs_mahasiswa ON krs(mahasiswa_id);
-CREATE INDEX idx_krs_semester ON krs(semester_akademik);
-CREATE INDEX idx_krs_status ON krs(status);
+CREATE INDEX IF NOT EXISTS idx_kelas_mata_kuliah ON kelas(mata_kuliah_id);
+CREATE INDEX IF NOT EXISTS idx_kelas_dosen ON kelas(dosen_id);
+CREATE INDEX IF NOT EXISTS idx_kelas_semester ON kelas(semester_akademik);
+CREATE INDEX IF NOT EXISTS idx_krs_mahasiswa ON krs(mahasiswa_id);
+CREATE INDEX IF NOT EXISTS idx_krs_semester ON krs(semester_akademik);
+CREATE INDEX IF NOT EXISTS idx_krs_status ON krs(status);

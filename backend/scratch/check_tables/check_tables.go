@@ -1,4 +1,4 @@
-package check_tables
+package main
 
 import (
 	"context"
