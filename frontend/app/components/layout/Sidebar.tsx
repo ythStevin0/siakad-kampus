@@ -101,9 +101,12 @@ export function Sidebar({ sidebarOpen, role, isSiakad, onOpenMessage }: SidebarP
       <NavLink
         key={index}
         to={item.to || "#"}
+        end={item.to === "/dashboard" || item.to === "/dashboard/krs"}
         className={({ isActive }) => {
           const url = new URL(item.to || "#", "http://localhost");
           const itemView = url.searchParams.get("view");
+          
+          // Logika pencocokan yang lebih ketat
           const isTrulyActive = isActive && (itemView === viewParam);
 
           return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group

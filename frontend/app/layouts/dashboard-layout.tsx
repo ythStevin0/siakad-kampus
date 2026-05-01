@@ -48,10 +48,15 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0a0a] text-zinc-300 font-sans selection:bg-red-600/30">
-      {/* Dynamic Background */}
+      {/* Campus Background with Overlay */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-red-900/10 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#1ea39e]/5 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <img 
+          src="/bg-kampus.png" 
+          alt="UISI Campus" 
+          className="w-full h-full object-cover opacity-60 scale-105 animate-slow-zoom"
+        />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-red-900/5 blur-[120px]" />
       </div>
 
       <Header 

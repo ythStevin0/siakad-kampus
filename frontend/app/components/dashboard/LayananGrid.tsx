@@ -40,18 +40,6 @@ const appCards: AppCard[] = [
     iconColor: "text-emerald-400",
   },
   {
-    id: "cari-user",
-    label: "Pencarian User & Dosen",
-    to: "/dashboard/cari-user",
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-      </svg>
-    ),
-    color: "from-violet-600/30 to-violet-900/20 border-violet-600/30 hover:border-violet-500/50",
-    iconColor: "text-violet-400",
-  },
-  {
     id: "peminjaman",
     label: "Sistem Peminjaman Ruang",
     to: "/dashboard",

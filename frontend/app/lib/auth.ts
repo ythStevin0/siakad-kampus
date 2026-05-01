@@ -57,6 +57,13 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     // Simpan access token di memori client
     setAccessToken(result.data.access_token);
 
+    // Simpan data user (email & role) agar DashboardLayout bisa memvalidasi sesi
+    localStorage.setItem("user", JSON.stringify({
+      email: result.data.email,
+      role: result.data.role,
+      name: result.data.email.split('@')[0] // Fallback nama dari email
+    }));
+
     return result;
   } catch (err: any) {
     throw err;
@@ -67,9 +74,10 @@ export const logout = async () => {
   try {
      await fetch("http://localhost:8080/api/auth/logout", {
       method: "POST",
-      credentials: "omit", // Cookie refresh_token dihapus di server
+      credentials: "omit", 
     });
     setAccessToken(null);
+    localStorage.removeItem("user"); // Hapus data user saat logout
   } catch (err) {
     console.error("Logout gagal", err);
   }

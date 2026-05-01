@@ -1,3 +1,5 @@
+import React from "react";
+
 interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -7,6 +9,26 @@ interface HeaderProps {
   onChangePassword: () => void;
   dropdownOpen: boolean;
   setDropdownOpen: (open: boolean) => void;
+}
+
+function RealTimeClock() {
+  const [time, setTime] = React.useState(new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="hidden md:flex flex-col items-end px-3 py-1 border-r border-white/10 mr-2">
+      <span className="text-[11px] font-black text-white/90 tabular-nums tracking-wider">
+        {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </span>
+      <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tight">
+        {time.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}
+      </span>
+    </div>
+  );
 }
 
 export function Header({ 
@@ -48,6 +70,8 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-4">
+        <RealTimeClock />
+
         <button className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/10 transition-colors relative">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
