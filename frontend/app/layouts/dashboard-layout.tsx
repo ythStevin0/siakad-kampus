@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router";
 import { useState, useEffect, type ReactNode } from "react";
 import { logout, getAccessToken, changePassword } from "../lib/auth";
 import { kirimPesan } from "../lib/api";
@@ -22,37 +22,16 @@ const menuByRole: Record<string, { label: string; to: string; icon: ReactNode }[
       to: "/dashboard",
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/>
-          <rect width="7" height="5" x="14" y="12" rx="1"/><rect width="7" height="9" x="3" y="16" rx="1"/>
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       ),
     },
     {
-      label: "Cari User",
+      label: "Pencarian",
       to: "/dashboard/cari-user",
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-        </svg>
-      ),
-    },
-    {
-      label: "KRS",
-      to: "/dashboard/krs",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          <line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/>
-        </svg>
-      ),
-    },
-    {
-      label: "Jadwal",
-      to: "/dashboard/jadwal",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/>
-          <line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
         </svg>
       ),
     },
@@ -132,6 +111,7 @@ const menuByRole: Record<string, { label: string; to: string; icon: ReactNode }[
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<{ email: string; role: string; name: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [time, setTime] = useState(new Date());
@@ -244,8 +224,12 @@ export default function DashboardLayout() {
                 <path d="M6.5 6C6.5 6 3 11 4 14.5C4.79526 17.2831 8.5 17.5 12 17.5C15.5 17.5 19.2047 17.2831 20 14.5C21 11 17.5 6 17.5 6C17.5 6 14 11 12 11C10 11 6.5 6 6.5 6Z" fill="rgba(255,255,255,0.75)"/>
               </svg>
             </div>
-            <span className="font-bold text-sm tracking-wider">
-              GAPURA<span className="text-red-500">UISI</span>
+            <span className="font-bold text-sm tracking-wider uppercase">
+              {location.pathname.includes("/krs") ? (
+                <>SIAKAD<span className="text-red-500">UISI</span></>
+              ) : (
+                <>GAPURA<span className="text-red-500">UISI</span></>
+              )}
             </span>
           </div>
         </div>
