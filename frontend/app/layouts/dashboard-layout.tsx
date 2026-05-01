@@ -3,8 +3,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { logout, getAccessToken, changePassword } from "../lib/auth";
 import { kirimPesan } from "../lib/api";
 
-// Tipe untuk data user dari JWT (nanti akan diambil dari context/state)
-// Sementara kita parse manual dari localStorage sebagai simulasi
+// Tipe untuk data user dari JWT
 function getUserFromStorage(): { email: string; role: string; name: string } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -14,8 +13,19 @@ function getUserFromStorage(): { email: string; role: string; name: string } | n
   return null;
 }
 
+// Definisi tipe untuk item menu
+interface MenuItem {
+  label: string;
+  to?: string;
+  icon?: ReactNode;
+  type?: "header" | "item";
+  isDropdown?: boolean;
+  badge?: string;
+  subItems?: { label: string; to: string; icon?: ReactNode }[];
+}
+
 // Definisi menu berdasarkan role
-const menuByRole: Record<string, { label: string; to: string; icon: ReactNode }[]> = {
+const menuByRole: Record<string, MenuItem[]> = {
   mahasiswa: [
     {
       label: "Dashboard",
@@ -32,6 +42,98 @@ const menuByRole: Record<string, { label: string; to: string; icon: ReactNode }[
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Dashboard",
+      to: "/dashboard/krs",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      ),
+    },
+    { type: "header", label: "MAHASISWA" },
+    {
+      label: "Formulir Rencana Studi",
+      to: "/dashboard/krs?view=form",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Daftar Kelas Mata Kuliah",
+      to: "/dashboard/krs?view=kelas",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Monitoring Perkuliahan",
+      to: "/dashboard/krs?view=monitoring",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>
+        </svg>
+      ),
+      badge: "New"
+    },
+    {
+      label: "Kuesioner",
+      to: "/dashboard/krs?view=kuesioner",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Laporan Nilai",
+      to: "#",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+      ),
+      isDropdown: true,
+      subItems: [
+        { label: "Hasil Studi Mahasiswa", to: "/dashboard/krs?view=khs" },
+        { label: "Riwayat Studi", to: "/dashboard/krs?view=riwayat" },
+        { label: "Transkrip / IPK", to: "/dashboard/krs?view=transkrip" },
+      ]
+    },
+    {
+      label: "Yudisium",
+      to: "#",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="9" x2="9" y1="3" y2="21"/><line x1="15" x2="15" y1="3" y2="21"/>
+        </svg>
+      ),
+      isDropdown: true,
+      subItems: [
+        { 
+          label: "Form Pendaftaran", 
+          to: "/dashboard/krs?view=yudisium-form",
+          icon: (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/>
+            </svg>
+          )
+        },
+      ]
+    },
+    {
+      label: "Verifikasi Data",
+      to: "/dashboard/krs?view=verifikasi",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>
         </svg>
       ),
     },
@@ -119,6 +221,7 @@ export default function DashboardLayout() {
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [pesanText, setPesanText] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>(["Laporan Nilai"]);
 
   // Change Password State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -128,6 +231,12 @@ export default function DashboardLayout() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const toggleDropdown = (label: string) => {
+    setOpenDropdowns(prev => 
+      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+    );
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +288,23 @@ export default function DashboardLayout() {
   };
 
   const role = user?.role || "mahasiswa";
-  const menus = menuByRole[role] || menuByRole.mahasiswa;
+  const isSiakad = location.pathname.includes("/krs");
+  const viewParam = new URLSearchParams(location.search).get("view");
+
+  // Filter menu berdasarkan konteks (SIAKAD atau GAPURA)
+  const allMenus = menuByRole[role] || menuByRole.mahasiswa;
+  const menus = allMenus.filter(item => {
+    if (role === "admin") return true; 
+    if (isSiakad) {
+      return (
+        item.to?.includes("/krs") || 
+        item.type === "header" || 
+        (item.isDropdown && item.subItems?.some(sub => sub.to.includes("/krs")))
+      );
+    } else {
+      return (item.to === "/dashboard" || item.label === "Pencarian") && !item.to?.includes("/krs");
+    }
+  });
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase();
@@ -192,6 +317,99 @@ export default function DashboardLayout() {
     admin: "ADMINISTRATOR",
   };
 
+  const renderMenuItem = (item: MenuItem, index: number) => {
+    if (item.type === "header") {
+      return sidebarOpen ? (
+        <p key={index} className="px-4 py-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+          {item.label}
+        </p>
+      ) : <div key={index} className="h-4" />;
+    }
+
+    if (item.isDropdown) {
+      const isOpen = openDropdowns.includes(item.label);
+      return (
+        <div key={index} className="space-y-0.5">
+          <button 
+            onClick={() => toggleDropdown(item.label)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:bg-white/5 hover:text-zinc-100 transition-all duration-150 group"
+          >
+            <span className="shrink-0">{item.icon}</span>
+            {sidebarOpen && (
+              <>
+                <span className="whitespace-nowrap font-medium text-[13px]">{item.label}</span>
+                <svg 
+                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" 
+                  className={`ml-auto text-zinc-600 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                >
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </>
+            )}
+          </button>
+          {sidebarOpen && isOpen && (
+            <div className="pl-9 space-y-0.5 animate-in slide-in-from-top-2 duration-200">
+              {item.subItems?.map((sub, sIdx) => {
+                const currentView = new URLSearchParams(location.search).get("view");
+                const itemUrl = new URL(sub.to, "http://localhost");
+                const itemView = itemUrl.searchParams.get("view");
+                const isTrulyActive = (itemView === currentView);
+
+                return (
+                  <NavLink
+                    key={sIdx}
+                    to={sub.to}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium transition-colors 
+                    ${isTrulyActive ? "text-[#1ea39e]" : "text-zinc-500 hover:text-zinc-300"}`}
+                  >
+                    {sub.icon ? (
+                      <span className="shrink-0 opacity-70">{sub.icon}</span>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0 opacity-60">
+                        <path d="M12 20v-6M6 20V10M18 20V4"/>
+                      </svg>
+                    )}
+                    {sub.label}
+                  </NavLink>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <NavLink
+        key={index}
+        to={item.to || "#"}
+        className={({ isActive }) => {
+          const url = new URL(item.to || "#", "http://localhost");
+          const itemView = url.searchParams.get("view");
+          const isTrulyActive = isActive && (itemView === viewParam);
+
+          return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group
+          ${isTrulyActive
+            ? (isSiakad ? "bg-[#1ea39e]/20 text-[#1ea39e] border border-[#1ea39e]/30" : "bg-red-600/20 text-red-400 border border-red-600/30")
+            : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
+          }`;
+        }}
+      >
+        <span className="shrink-0">{item.icon}</span>
+        {sidebarOpen && (
+          <span className="whitespace-nowrap transition-opacity duration-200 text-[13px] font-medium">
+            {item.label}
+          </span>
+        )}
+        {sidebarOpen && item.badge && (
+          <span className="ml-auto px-1.5 py-0.5 rounded bg-amber-500 text-[8px] font-black text-zinc-950 uppercase animate-pulse">
+            {item.badge}
+          </span>
+        )}
+      </NavLink>
+    );
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100"
@@ -202,12 +420,9 @@ export default function DashboardLayout() {
         backgroundAttachment: "fixed",
       }}
     >
-      {/* Overlay gelap agar konten terbaca */}
       <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px] pointer-events-none z-0" />
 
-      {/* Top Navbar */}
       <header className="relative z-20 flex items-center justify-between px-4 py-0 h-14 bg-black/40 border-b border-white/10 backdrop-blur-md">
-        {/* Kiri: Logo + Hamburger */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -225,7 +440,7 @@ export default function DashboardLayout() {
               </svg>
             </div>
             <span className="font-bold text-sm tracking-wider uppercase">
-              {location.pathname.includes("/krs") ? (
+              {isSiakad ? (
                 <>SIAKAD<span className="text-red-500">UISI</span></>
               ) : (
                 <>GAPURA<span className="text-red-500">UISI</span></>
@@ -234,31 +449,30 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        {/* Kanan: Waktu + Notif + Profil */}
         <div className="flex items-center gap-4">
-          {/* Notif Bell */}
           <button className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/10 transition-colors relative">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
             </svg>
           </button>
 
-          {/* Profil */}
           <div className="relative">
             <button 
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm text-zinc-300"
+              className="flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group"
             >
-              <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300">
+              <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-black text-zinc-400 group-hover:scale-110 transition-transform uppercase">
                 {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
-              <span className="hidden sm:block max-w-[120px] truncate">{user?.name || user?.email}</span>
+              <div className="text-left hidden sm:block">
+                <p className="text-xs font-bold text-zinc-300 leading-none">{user?.name || user?.email}</p>
+                <p className="text-[10px] text-zinc-500 mt-1 uppercase font-black tracking-tighter">Mahasiswa</p>
+              </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}>
                 <path d="M6 9l6 6 6-6"/>
               </svg>
             </button>
 
-            {/* Dropdown Menu */}
             {dropdownOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)}></div>
@@ -294,39 +508,18 @@ export default function DashboardLayout() {
         </div>
       </header>
 
-      {/* Body: Sidebar + Konten */}
-      <div className="relative z-10 flex flex-1">
-        {/* Sidebar */}
+      <div className="relative z-10 flex flex-1 overflow-hidden">
         <aside
           className={`
             flex flex-col bg-black/40 backdrop-blur-xl border-r border-white/10
-            transition-all duration-300 ease-in-out overflow-hidden
+            transition-all duration-300 ease-in-out overflow-hidden shrink-0
             ${sidebarOpen ? "w-52" : "w-0 lg:w-14"}
           `}
         >
-          <nav className="flex-1 mt-4 space-y-0.5 px-2">
-            {menus.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/dashboard"}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group
-                  ${isActive
-                    ? "bg-red-600/20 text-red-400 border border-red-600/30"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
-                  }`
-                }
-              >
-                <span className="shrink-0">{item.icon}</span>
-                <span className={`whitespace-nowrap transition-opacity ${sidebarOpen ? "opacity-100" : "opacity-0 lg:opacity-0"}`}>
-                  {item.label}
-                </span>
-              </NavLink>
-            ))}
+          <nav className="flex-1 mt-4 space-y-0.5 px-2 overflow-y-auto custom-scrollbar">
+            {menus.map((item, index) => renderMenuItem(item, index))}
           </nav>
 
-          {/* Send Message Button di bawah */}
           <div className="p-4 mt-auto">
             <button
               onClick={() => setIsMessageOpen(!isMessageOpen)}
@@ -342,13 +535,11 @@ export default function DashboardLayout() {
           </div>
         </aside>
 
-        {/* Popup Chat Box - Tertuju Admin */}
         {isMessageOpen && (
           <div 
             className={`fixed bottom-0 z-50 w-full sm:w-[350px] bg-[#1ea39e] sm:rounded-t-2xl shadow-2xl transition-all duration-300 ease-in-out left-0 ${sidebarOpen ? "sm:left-52" : "sm:left-0 lg:left-14"}`} 
             style={{ bottom: 0 }}
           >
-            {/* Header / Tombol Close */}
             <div className="flex justify-end p-3 pb-1">
               <button onClick={() => setIsMessageOpen(false)} className="text-white hover:text-white/80 transition-colors">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -358,14 +549,12 @@ export default function DashboardLayout() {
               </button>
             </div>
 
-            {/* Body / Card Form */}
             <div className="bg-white m-3 mt-0 p-5 rounded-xl shadow-sm">
               <form 
                 className="space-y-4" 
                 onSubmit={async (e) => { 
                   e.preventDefault();
                   if (!pesanText.trim()) return;
-                  
                   setIsSendingMessage(true);
                   try {
                     await kirimPesan(pesanText);
@@ -379,53 +568,28 @@ export default function DashboardLayout() {
                   }
                 }}
               >
-                
-                {/* Input Nama (Readonly) */}
                 <div className="relative mt-2">
                   <label className="absolute -top-2.5 left-3 bg-white px-1 text-[11px] text-zinc-700 font-medium z-10 flex gap-1">
                     <span className="text-red-500">*</span> Nama
                   </label>
-                  <input 
-                    type="text" 
-                    readOnly 
-                    value={user?.name || ""} 
-                    className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-800 bg-white focus:outline-none" 
-                  />
+                  <input type="text" readOnly value={user?.name || ""} className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-800 bg-white focus:outline-none" />
                 </div>
 
-                {/* Input Email (Readonly) */}
                 <div className="relative mt-4">
                   <label className="absolute -top-2.5 left-3 bg-white px-1 text-[11px] text-zinc-700 font-medium z-10 flex gap-1">
                     <span className="text-red-500">*</span> Email
                   </label>
-                  <input 
-                    type="email" 
-                    readOnly 
-                    value={user?.email || ""} 
-                    className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-800 bg-white focus:outline-none" 
-                  />
+                  <input type="email" readOnly value={user?.email || ""} className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-800 bg-white focus:outline-none" />
                 </div>
 
-                {/* Input Pesan */}
                 <div className="relative mt-4 mb-2">
                   <label className="absolute -top-2.5 left-3 bg-white px-1 text-[11px] text-zinc-700 font-medium z-10 flex gap-1">
                     <span className="text-red-500">*</span> Pesan
                   </label>
-                  <textarea 
-                    required 
-                    rows={4} 
-                    value={pesanText}
-                    onChange={(e) => setPesanText(e.target.value)}
-                    className="w-full border border-zinc-200 rounded-lg px-3 py-3 text-sm text-zinc-800 focus:outline-none focus:border-[#1ea39e] transition-colors resize-none"
-                  ></textarea>
+                  <textarea required rows={4} value={pesanText} onChange={(e) => setPesanText(e.target.value)} className="w-full border border-zinc-200 rounded-lg px-3 py-3 text-sm text-zinc-800 focus:outline-none focus:border-[#1ea39e] transition-colors resize-none"></textarea>
                 </div>
 
-                {/* Tombol Kirim */}
-                <button 
-                  type="submit" 
-                  disabled={isSendingMessage}
-                  className="w-full mt-2 bg-[#1ea39e] hover:bg-[#188f88] disabled:bg-[#1ea39e]/50 text-white py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors"
-                >
+                <button type="submit" disabled={isSendingMessage} className="w-full mt-2 bg-[#1ea39e] hover:bg-[#188f88] disabled:bg-[#1ea39e]/50 text-white py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
                   </svg>
@@ -436,9 +600,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        {/* Konten Utama */}
         <main className="flex-1 overflow-auto">
-          {/* Breadcrumb Bar */}
           <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-black/20 backdrop-blur-sm text-xs text-zinc-500">
             <div className="flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -452,14 +614,12 @@ export default function DashboardLayout() {
             </span>
           </div>
 
-          {/* Page Content */}
           <div className="p-6">
             <Outlet context={{ user, roleLabel: roleLabel[role] || "USER" }} />
           </div>
         </main>
       </div>
 
-      {/* Modal Ubah Password */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsPasswordModalOpen(false)}></div>
@@ -467,64 +627,24 @@ export default function DashboardLayout() {
             <div className="p-6">
               <h2 className="text-xl font-bold text-zinc-100 mb-1">Ubah Password</h2>
               <p className="text-xs text-zinc-500 mb-6">Silakan perbarui kata sandi Anda di sini.</p>
-
-              {passwordError && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-                  {passwordError}
-                </div>
-              )}
-              {passwordSuccess && (
-                <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400">
-                  {passwordSuccess}
-                </div>
-              )}
-
+              {passwordError && <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">{passwordError}</div>}
+              {passwordSuccess && <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400">{passwordSuccess}</div>}
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Password Lama</label>
-                  <input
-                    type="password"
-                    required
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 transition-colors"
-                  />
+                  <input type="password" required value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Password Baru</label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 transition-colors"
-                  />
+                  <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Konfirmasi Password Baru</label>
-                  <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 transition-colors"
-                  />
+                  <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-500 transition-colors" />
                 </div>
                 <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsPasswordModalOpen(false)}
-                    className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium transition-colors"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isChangingPassword}
-                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-sm font-medium transition-colors"
-                  >
-                    {isChangingPassword ? "Menyimpan..." : "Simpan"}
-                  </button>
+                  <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium transition-colors">Batal</button>
+                  <button type="submit" disabled={isChangingPassword} className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-sm font-medium transition-colors">{isChangingPassword ? "Menyimpan..." : "Simpan"}</button>
                 </div>
               </form>
             </div>
