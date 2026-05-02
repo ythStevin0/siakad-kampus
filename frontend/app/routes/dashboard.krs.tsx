@@ -19,6 +19,7 @@ import { KHSView } from "../components/siakad/KHSView";
 import { RiwayatStudiView } from "../components/siakad/RiwayatStudiView";
 import { VerifikasiDataView } from "../components/siakad/VerifikasiDataView";
 import { YudisiumView } from "../components/siakad/YudisiumView";
+import { TranskripView } from "../components/siakad/TranskripView";
 
 interface User {
   email: string;
@@ -100,6 +101,8 @@ export default function SIAKADContainer() {
       return <VerifikasiDataView user={user} />;
     case "yudisium-form":
       return <YudisiumView />;
+    case "transkrip":
+      return <TranskripView user={user} />;
     default:
       return <DashboardHome user={user} myKRS={myKRS} />;
   }
