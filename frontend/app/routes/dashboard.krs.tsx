@@ -16,6 +16,7 @@ import { KelasView } from "../components/siakad/KelasView";
 import { MonitoringView } from "../components/siakad/MonitoringView";
 import { KuesionerView } from "../components/siakad/KuesionerView";
 import { KHSView } from "../components/siakad/KHSView";
+import { RiwayatStudiView } from "../components/siakad/RiwayatStudiView";
 
 interface User {
   email: string;
@@ -97,6 +98,10 @@ export default function SIAKADContainer() {
 
   if (view === "khs") {
     return <KHSView user={user} />;
+  }
+
+  if (view === "riwayat") {
+    return <RiwayatStudiView user={user} />;
   }
 
   return <DashboardHome user={user} myKRS={myKRS} />;
