@@ -20,7 +20,7 @@ export function YudisiumView() {
       <div className="h-[60vh] flex flex-col items-center justify-center space-y-6 bg-zinc-900/20 rounded-3xl border border-white/5">
         <div className="relative group">
           {/* Glow Effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-[#1ea39e] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+          <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-[#1ea39e] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
           
           <div className="relative bg-zinc-900 border border-white/10 p-10 rounded-full shadow-2xl backdrop-blur-xl">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1ea39e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -31,7 +31,7 @@ export function YudisiumView() {
         </div>
 
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-500 uppercase tracking-[0.3em]">
+          <h2 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-zinc-500 uppercase tracking-[0.3em]">
             Segera Hadir
           </h2>
           <div className="h-1 w-20 bg-[#1ea39e] mx-auto rounded-full"></div>
