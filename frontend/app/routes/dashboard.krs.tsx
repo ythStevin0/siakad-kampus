@@ -1,4 +1,4 @@
-import { useOutletContext, useSearchParams } from "react-router";
+import { useOutletContext, useSearchParams, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import { 
   fetchAvailableKelas, 
@@ -18,6 +18,7 @@ import { KuesionerView } from "../components/siakad/KuesionerView";
 import { KHSView } from "../components/siakad/KHSView";
 import { RiwayatStudiView } from "../components/siakad/RiwayatStudiView";
 import { VerifikasiDataView } from "../components/siakad/VerifikasiDataView";
+import { YudisiumView } from "../components/siakad/YudisiumView";
 
 interface User {
   email: string;
@@ -32,7 +33,8 @@ interface OutletContext {
 
 export default function SIAKADContainer() {
   const { user } = useOutletContext<OutletContext>();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const view = searchParams.get("view") || "dashboard";
 
   const [availableKelas, setAvailableKelas] = useState<Kelas[]>([]);
@@ -81,33 +83,24 @@ export default function SIAKADContainer() {
   };
 
   // Routing Logic
-  if (view === "form") {
-    return <KRSForm user={user} availableKelas={availableKelas} myKRS={myKRS} onEnroll={handleEnroll} onDrop={handleDrop} />;
+  switch (view) {
+    case "form":
+      return <KRSForm user={user} availableKelas={availableKelas} myKRS={myKRS} onEnroll={handleEnroll} onDrop={handleDrop} />;
+    case "kelas":
+      return <KelasView availableKelas={availableKelas} loading={loading} />;
+    case "monitoring":
+      return <MonitoringView myKRS={myKRS} loading={loading} />;
+    case "kuesioner":
+      return <KuesionerView myKRS={myKRS} loading={loading} />;
+    case "khs":
+      return <KHSView user={user} />;
+    case "riwayat":
+      return <RiwayatStudiView user={user} />;
+    case "verifikasi":
+      return <VerifikasiDataView user={user} />;
+    case "yudisium-form":
+      return <YudisiumView />;
+    default:
+      return <DashboardHome user={user} myKRS={myKRS} />;
   }
-
-  if (view === "kelas") {
-    return <KelasView availableKelas={availableKelas} loading={loading} />;
-  }
-
-  if (view === "monitoring") {
-    return <MonitoringView myKRS={myKRS} loading={loading} />;
-  }
-
-  if (view === "kuesioner") {
-    return <KuesionerView myKRS={myKRS} loading={loading} />;
-  }
-
-  if (view === "khs") {
-    return <KHSView user={user} />;
-  }
-
-  if (view === "riwayat") {
-    return <RiwayatStudiView user={user} />;
-  }
-
-  if (view === "verifikasi") {
-    return <VerifikasiDataView user={user} />;
-  }
-
-  return <DashboardHome user={user} myKRS={myKRS} />;
 }
