@@ -159,7 +159,7 @@ export function DashboardHome({ user, myKRS }: DashboardHomeProps) {
           <DocCard label="Peraturan Akademik" sub="versi 2025" color="bg-[#8e44ad]" type="UNDUH" />
           <DocCard label="Tata Kehidupan Kampus" sub="UISI" color="bg-[#7f8c8d]" type="UNDUH" />
           <DocCard label="Layanan Akademik" sub="UISI" color="bg-[#2c3e50]" type="BUKA" />
-          <DocCard label="Panduan Upload Mandiri" sub="Repository UISI 202x" color="bg-[#f1c40f] text-black" type="UNDUH" />
+          <DocCard label="Panduan Upload Mandiri" sub="Masterpiece UISI 202x" color="bg-[#f1c40f] text-black" type="UNDUH" />
         </div>
       </div>
     </div>

@@ -54,11 +54,11 @@ const appCards: AppCard[] = [
   },
   {
     id: "repository",
-    label: "Repository UISI",
+    label: "Masterpiece UISI",
     to: "/dashboard",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>
     ),
     color: "from-amber-600/30 to-amber-900/20 border-amber-600/30 hover:border-amber-500/50",
@@ -66,12 +66,13 @@ const appCards: AppCard[] = [
   },
   {
     id: "uisilink",
-    label: "UISI Link",
+    label: "Perpustakaan UISI",
     to: "/dashboard",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+        <path d="M8 7h6"/>
+        <path d="M8 11h8"/>
       </svg>
     ),
     color: "from-cyan-600/30 to-cyan-900/20 border-cyan-600/30 hover:border-cyan-500/50",
