@@ -80,7 +80,21 @@ func (s *Service) EnrollKelas(ctx context.Context, userID uuid.UUID, kelasID str
 		return ErrScheduleConflict
 	}
 
-	// 5. Cek Batas SKS (Contoh: Max 24 SKS)
+	// 5. Cek Batas SKS (Berdasarkan IPS semester sebelumnya)
+	// Aturan: IPS < 2.0 (18 SKS), 2.0-2.9 (21 SKS), >= 3.0 (24 SKS)
+	// Untuk Mahasiswa Baru (Angkatan 2026), otomatis 24 SKS
+	maxSKS := 24
+	if mhs.Angkatan != 2026 {
+		// Logika Simulasi IPS (Nanti bisa dihubungkan ke tabel KHS/Nilai)
+		// Kita asumsikan default 20 SKS jika bukan mahasiswa baru untuk simulasi pembatasan
+		maxSKS = 20 
+		
+		// Jika mahasiswa memiliki izin khusus (IzinKRS), bisa ambil sampai 24
+		if mhs.IzinKRS {
+			maxSKS = 24
+		}
+	}
+
 	currentKRS, err := s.repo.GetKRSMahasiswa(ctx, mhs.ID.String(), semesterAkademik)
 	if err != nil {
 		return err
@@ -101,16 +115,22 @@ func (s *Service) EnrollKelas(ctx context.Context, userID uuid.UUID, kelasID str
 		return fmt.Errorf("failed to get class SKS: %w", err)
 	}
 
-	if totalSKS+newSKS > 24 {
-		return ErrMaxSKS
+	if totalSKS+newSKS > maxSKS {
+		return fmt.Errorf("batas SKS Anda adalah %d SKS. Anda tidak bisa mengambil mata kuliah ini", maxSKS)
 	}
 
 	// 6. Simpan ke database
+	status := model.KRSStatusPending
+	// Aturan: Mahasiswa Baru (Angkatan 2026) otomatis DISETUJUI
+	if mhs.Angkatan == 2026 {
+		status = model.KRSStatusDisetujui
+	}
+
 	newKRS := &model.KRS{
 		MahasiswaID:      mhs.ID,
 		KelasID:          uuid.MustParse(kelasID),
 		SemesterAkademik: semesterAkademik,
-		Status:           model.KRSStatusPending,
+		Status:           status,
 	}
 
 	return s.repo.AddKRS(ctx, newKRS)
