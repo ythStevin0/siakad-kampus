@@ -7,18 +7,22 @@ import (
 )
 
 type Mahasiswa struct {
-	ID           uuid.UUID `json:"id" db:"id"`
-	UserID       uuid.UUID `json:"user_id" db:"user_id"`
-	NIM          string    `json:"nim" db:"nim"`
-	NamaLengkap  string    `json:"nama_lengkap" db:"nama_lengkap"`
-	ProgramStudi string    `json:"program_studi" db:"program_studi"`
-	Angkatan     int       `json:"angkatan" db:"angkatan"`
-	JalurMasuk   *string   `json:"jalur_masuk" db:"jalur_masuk"`
-	StatusUKT    bool      `json:"status_ukt" db:"status_ukt"`
-	StatusBIP    bool      `json:"status_bip" db:"status_bip"`
-	IzinKRS      bool      `json:"izin_krs" db:"izin_krs"`
-	CreatedAt    time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+	ID            uuid.UUID  `json:"id" db:"id"`
+	UserID        uuid.UUID  `json:"user_id" db:"user_id"`
+	NIM           string     `json:"nim" db:"nim"`
+	NamaLengkap   string     `json:"nama_lengkap" db:"nama_lengkap"`
+	ProgramStudi  string     `json:"program_studi" db:"program_studi"`
+	Angkatan      int        `json:"angkatan" db:"angkatan"`
+	JalurMasuk    *string    `json:"jalur_masuk" db:"jalur_masuk"`
+	StatusUKT     bool       `json:"status_ukt" db:"status_ukt"`
+	StatusBIP     bool       `json:"status_bip" db:"status_bip"`
+	IzinKRS       bool       `json:"izin_krs" db:"izin_krs"`
+	DosenWaliID   *uuid.UUID `json:"dosen_wali_id" db:"dosen_wali_id"`
+	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
+
+	// Field virtual dari JOIN
+	NamaDosenWali string `json:"nama_dosen_wali,omitempty" db:"-"`
 }
 
 type Dosen struct {
@@ -90,6 +94,7 @@ type KRS struct {
 	KelasID          uuid.UUID `json:"kelas_id" db:"kelas_id"`
 	SemesterAkademik string    `json:"semester_akademik" db:"semester_akademik"`
 	Status           KRSStatus `json:"status" db:"status"`
+	Catatan          *string   `json:"catatan" db:"catatan"` // Catatan penolakan dari dosen wali
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
 

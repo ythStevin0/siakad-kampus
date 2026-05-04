@@ -20,20 +20,23 @@ import { RiwayatStudiView } from "../components/siakad/RiwayatStudiView";
 import { VerifikasiDataView } from "../components/siakad/VerifikasiDataView";
 import { YudisiumView } from "../components/siakad/YudisiumView";
 import { TranskripView } from "../components/siakad/TranskripView";
+import { DosenWaliPortal } from "../components/dosen/DosenWaliPortal";
 
 interface User {
   email: string;
   role: string;
   name: string;
+  token?: string;
 }
 
 interface OutletContext {
   user: User | null;
   roleLabel: string;
+  token?: string;
 }
 
 export default function SIAKADContainer() {
-  const { user } = useOutletContext<OutletContext>();
+  const { user, token } = useOutletContext<OutletContext & { token?: string }>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const view = searchParams.get("view") || "dashboard";
@@ -42,6 +45,27 @@ export default function SIAKADContainer() {
   const [myKRS, setMyKRS] = useState<KRS[]>([]);
   const [loading, setLoading] = useState(true);
   const currentSemester = "2025/2026 Genap";
+
+  // Jika role dosen, tampilkan portal dosen langsung
+  const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "");
+  if (user?.role === "dosen") {
+    return (
+      <div className="relative pt-8">
+        <div className="absolute top-0 right-0 no-print z-50">
+          <a 
+            href="/dashboard"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/60 hover:bg-[#1ea39e]/20 border border-white/10 hover:border-[#1ea39e]/50 text-[10px] font-black text-zinc-400 hover:text-[#1ea39e] transition-all backdrop-blur-xl group shadow-2xl"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:-translate-x-1">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            KEMBALI KE GAPURA UISI
+          </a>
+        </div>
+        <DosenWaliPortal token={authToken} />
+      </div>
+    );
+  }
 
   useEffect(() => {
     const loadData = async () => {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"siakad/backend/internal/auth"
 	"siakad/backend/internal/berita"
 	"siakad/backend/internal/dosen"
+	"siakad/backend/internal/dosenWali"
 	"siakad/backend/internal/mahasiswa"
 	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
@@ -87,6 +89,11 @@ func main() {
 	akademikService := akademik.NewService(akademikRepo, mahasiswaRepo)
 	akademikHandler := akademik.NewHandler(akademikService)
 
+	// Dosen Wali
+	dosenWaliRepo := dosenWali.NewRepository(db)
+	dosenWaliService := dosenWali.NewService(dosenWaliRepo)
+	dosenWaliHandler := dosenWali.NewHandler(dosenWaliService, logger)
+
 	// 5. Init router
 	r := chi.NewRouter()
 
@@ -147,6 +154,21 @@ func main() {
 		r.Post("/mahasiswa", mahasiswaHandler.Create)
 		r.Put("/mahasiswa/{id}", mahasiswaHandler.Update)
 		r.Delete("/mahasiswa/{id}", mahasiswaHandler.Delete)
+		r.Put("/mahasiswa/{id}/assign-dosen-wali", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+			var req struct {
+				DosenID string `json:"dosen_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.DosenID == "" {
+				response.Error(w, http.StatusBadRequest, "dosen_id wajib diisi", "")
+				return
+			}
+			if err := dosenWaliService.AssignDosenWali(r.Context(), id, req.DosenID); err != nil {
+				response.Error(w, http.StatusInternalServerError, "Gagal assign dosen wali", err.Error())
+				return
+			}
+			response.Success(w, http.StatusOK, "Dosen wali berhasil ditugaskan", nil)
+		})
 
 		// Dosen
 		r.Get("/dosen", dosenHandler.GetAllDosen)
@@ -182,6 +204,20 @@ func main() {
 		r.Get("/krs", akademikHandler.GetKRS)
 		r.Post("/krs/ambil", akademikHandler.EnrollKelas)
 		r.Delete("/krs/batal/{id}", akademikHandler.DropKelas)
+	})
+
+	// 11. Route Dosen Wali
+	r.Route("/api/dosen", func(r chi.Router) {
+		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+		r.Use(middleware.RequireRole(model.RoleDosen))
+
+		r.Get("/profil", dosenWaliHandler.GetProfil)
+		r.Get("/dashboard", dosenWaliHandler.GetDashboard)
+		r.Get("/wali/mahasiswa", dosenWaliHandler.GetMahasiswaAsuhan)
+		r.Get("/wali/mahasiswa/{mahasiswaId}/krs", dosenWaliHandler.GetKRSMahasiswa)
+		r.Put("/wali/krs/{id}/approve", dosenWaliHandler.ApproveKRS)
+		r.Put("/wali/krs/{id}/reject", dosenWaliHandler.RejectKRS)
+		r.Put("/wali/mahasiswa/{mahasiswaId}/krs/approve-all", dosenWaliHandler.ApproveAllKRS)
 	})
 
 	// 11. Start Server

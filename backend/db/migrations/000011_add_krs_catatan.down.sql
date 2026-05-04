@@ -1,0 +1,1 @@
+ALTER TABLE krs DROP COLUMN IF EXISTS catatan;
