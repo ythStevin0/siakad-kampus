@@ -5,6 +5,7 @@ import {
   fetchKRS, 
   enrollKelas, 
   dropKelas, 
+  fetchProfilKRS,
   type Kelas, 
   type KRS 
 } from "../lib/api";
@@ -44,7 +45,7 @@ export default function SIAKADContainer() {
   const [availableKelas, setAvailableKelas] = useState<Kelas[]>([]);
   const [myKRS, setMyKRS] = useState<KRS[]>([]);
   const [loading, setLoading] = useState(true);
-  const currentSemester = "2025/2026 Genap";
+  const [currentSemester, setCurrentSemester] = useState("");
 
   // Jika role dosen, tampilkan portal dosen langsung
   const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "");
@@ -71,9 +72,13 @@ export default function SIAKADContainer() {
     const loadData = async () => {
       setLoading(true);
       try {
+        // Ambil profil dulu untuk dapat semester akademik yang tepat
+        const profil = await fetchProfilKRS();
+        setCurrentSemester(profil.semester_akademik);
+
         const [kelasData, krsData] = await Promise.all([
-          fetchAvailableKelas(currentSemester),
-          fetchKRS(currentSemester)
+          fetchAvailableKelas(profil.semester_akademik),
+          fetchKRS(profil.semester_akademik)
         ]);
         setAvailableKelas(kelasData);
         setMyKRS(krsData);
@@ -84,7 +89,7 @@ export default function SIAKADContainer() {
       }
     };
     loadData();
-  }, [currentSemester]);
+  }, []);
 
   const handleEnroll = async (kelasId: string) => {
     try {

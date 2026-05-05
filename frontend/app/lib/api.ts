@@ -283,4 +283,24 @@ export async function dropKelas(krsId: string) {
   return res.data;
 }
 
+export interface ProfilKRS {
+  nim: string;
+  nama_lengkap: string;
+  program_studi: string;
+  angkatan: number;
+  semester_sekarang: number;
+  semester_akademik: string;
+  ips_semester_lalu: number;
+  nama_dosen_wali: string;
+  max_sks: number;
+  status_ukt: boolean;
+  status_bip: boolean;
+  izin_krs: boolean;
+}
+
+export async function fetchProfilKRS(): Promise<ProfilKRS> {
+  const res = await apiFetch("/api/akademik/profil-krs");
+  return res.data as ProfilKRS;
+}
+
 

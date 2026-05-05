@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchProfilKRS, type ProfilKRS } from "../../lib/api";
 
 interface KRSFormProps {
   user: any;
@@ -10,17 +11,22 @@ interface KRSFormProps {
 
 export function KRSForm({ user, availableKelas, myKRS, onEnroll, onDrop }: KRSFormProps) {
   const [activeTab, setActiveTab] = useState("general");
-  const dataMahasiswa = {
-    nim: "3012410047",
-    nama: user?.name || "Stevino Adi Nugroho",
-    semester: "2025/2026 - Genap",
-    ipSemesterLalu: "2.81",
-    dosenWali: "Taufiqotul Bariyah, S.Kom., M.IM., MCE",
-    prodi: "S1 Informatika"
-  };
+  const [profil, setProfil] = useState<ProfilKRS | null>(null);
+  const [selectedKelas, setSelectedKelas] = useState("");
+
+  useEffect(() => {
+    fetchProfilKRS().then(setProfil).catch(console.error);
+  }, []);
 
   const totalSks = myKRS.reduce((a: any, b: any) => a + b.sks, 0);
-  const maxSks = 20;
+  const maxSks = profil?.max_sks || 20;
+
+  const handleEnrollClick = () => {
+    if (!selectedKelas) return alert("Pilih mata kuliah terlebih dahulu");
+    if (!profil) return;
+    onEnroll(selectedKelas);
+    setSelectedKelas("");
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -48,33 +54,35 @@ export function KRSForm({ user, availableKelas, myKRS, onEnroll, onDrop }: KRSFo
           <div className="space-y-4">
             <div className="flex items-center">
               <label className="w-24 text-[11px] font-bold text-zinc-500 uppercase">NIM:</label>
-              <input readOnly value={dataMahasiswa.nim} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" />
+              <input readOnly value={profil?.nim || "..."} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" />
             </div>
             <div className="flex items-center">
               <label className="w-24 text-[11px] font-bold text-zinc-500 uppercase">Nama:</label>
-              <input readOnly value={dataMahasiswa.nama} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" />
+              <input readOnly value={profil?.nama_lengkap || user?.name || "..."} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" />
             </div>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center">
               <label className="w-24 text-[11px] font-bold text-zinc-500 uppercase">Semester:</label>
-              <select disabled className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none appearance-none">
-                <option>{dataMahasiswa.semester}</option>
-              </select>
+              <div className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 flex items-center justify-between">
+                <span>{profil?.semester_akademik || "..."}</span>
+                <span className="text-[10px] bg-[#1ea39e]/20 text-[#1ea39e] px-2 py-0.5 rounded-full font-black">SEM {profil?.semester_sekarang || "-"}</span>
+              </div>
             </div>
             <div className="flex items-center">
               <label className="w-24 text-[11px] font-bold text-zinc-500 uppercase leading-tight">IP Semester Lalu:</label>
-              <input readOnly value={dataMahasiswa.ipSemesterLalu} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" />
+              <input readOnly value={profil?.ips_semester_lalu?.toFixed(2) || "0.00"} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none" />
             </div>
           </div>
 
           <div className="space-y-4 lg:col-span-1">
              <div className="flex items-start">
               <label className="w-24 text-[11px] font-bold text-zinc-500 uppercase pt-2">Dosen Wali:</label>
-              <textarea readOnly rows={2} value={dataMahasiswa.dosenWali} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none resize-none leading-relaxed" />
+              <textarea readOnly rows={2} value={profil?.nama_dosen_wali || "..."} className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none resize-none leading-relaxed" />
             </div>
           </div>
+
         </div>
         
         <div className="mt-6 pt-6 border-t border-white/5 flex gap-3">
@@ -118,19 +126,26 @@ export function KRSForm({ user, availableKelas, myKRS, onEnroll, onDrop }: KRSFo
         <div className="max-w-3xl mx-auto space-y-4 mb-8">
           <div className="flex items-center">
             <label className="w-40 text-[11px] font-bold text-zinc-500 uppercase text-right mr-6">Program Studi:</label>
-            <input readOnly value={dataMahasiswa.prodi} className="flex-1 bg-zinc-800/50 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-zinc-400 focus:outline-none" />
+            <input readOnly value={profil?.program_studi || "..."} className="flex-1 bg-zinc-800/50 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-zinc-400 focus:outline-none" />
           </div>
           <div className="flex items-center">
             <label className="w-40 text-[11px] font-bold text-zinc-500 uppercase text-right mr-6">Mata Kuliah (Kelas):</label>
-            <select className="flex-1 bg-zinc-800/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-[#1ea39e] transition-colors cursor-pointer">
-              <option>-- Pilih Mata Kuliah --</option>
+            <select 
+              value={selectedKelas}
+              onChange={(e) => setSelectedKelas(e.target.value)}
+              className="flex-1 bg-zinc-800/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-[#1ea39e] transition-colors cursor-pointer"
+            >
+              <option value="">-- Pilih Mata Kuliah --</option>
               {availableKelas.map((k: any) => (
                 <option key={k.id} value={k.id}>{k.nama_mata_kuliah} ({k.kode_kelas}) - {k.sks} SKS</option>
               ))}
             </select>
           </div>
           <div className="flex justify-end pt-2">
-            <button className="px-6 py-2 rounded-lg bg-[#3498db] hover:bg-[#2980b9] text-[11px] font-black text-white shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 uppercase">
+            <button 
+              onClick={handleEnrollClick}
+              className="px-6 py-2 rounded-lg bg-[#3498db] hover:bg-[#2980b9] text-[11px] font-black text-white shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 uppercase"
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
               Tambahkan
             </button>
