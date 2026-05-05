@@ -200,6 +200,7 @@ func main() {
 	r.Route("/api/akademik", func(r chi.Router) {
 		r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
 
+		r.Get("/profil-krs", akademikHandler.GetProfilKRS)
 		r.Get("/kelas/tersedia", akademikHandler.GetAvailableKelas)
 		r.Get("/krs", akademikHandler.GetKRS)
 		r.Post("/krs/ambil", akademikHandler.EnrollKelas)

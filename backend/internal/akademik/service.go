@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"time"
 
 	"siakad/backend/internal/mahasiswa"
 	"siakad/backend/internal/model"
@@ -80,20 +82,10 @@ func (s *Service) EnrollKelas(ctx context.Context, userID uuid.UUID, kelasID str
 		return ErrScheduleConflict
 	}
 
-	// 5. Cek Batas SKS (Berdasarkan IPS semester sebelumnya)
-	// Aturan: IPS < 2.0 (18 SKS), 2.0-2.9 (21 SKS), >= 3.0 (24 SKS)
-	// Untuk Mahasiswa Baru (Angkatan 2026), otomatis 24 SKS
-	maxSKS := 24
-	if mhs.Angkatan != 2026 {
-		// Logika Simulasi IPS (Nanti bisa dihubungkan ke tabel KHS/Nilai)
-		// Kita asumsikan default 20 SKS jika bukan mahasiswa baru untuk simulasi pembatasan
-		maxSKS = 20 
-		
-		// Jika mahasiswa memiliki izin khusus (IzinKRS), bisa ambil sampai 24
-		if mhs.IzinKRS {
-			maxSKS = 24
-		}
-	}
+	// 5. Hitung semester & max SKS secara dinamis
+	semesterSekarang, _, semesterSebelumnya := hitungSemester(mhs.Angkatan)
+	ips := s.repo.GetIPSSemesterLalu(ctx, mhs.ID.String(), semesterSebelumnya)
+	maxSKS := hitungMaxSKS(semesterSekarang, ips, mhs.IzinKRS)
 
 	currentKRS, err := s.repo.GetKRSMahasiswa(ctx, mhs.ID.String(), semesterAkademik)
 	if err != nil {
@@ -121,8 +113,8 @@ func (s *Service) EnrollKelas(ctx context.Context, userID uuid.UUID, kelasID str
 
 	// 6. Simpan ke database
 	status := model.KRSStatusPending
-	// Aturan: Mahasiswa Baru (Angkatan 2026) otomatis DISETUJUI
-	if mhs.Angkatan == 2026 {
+	// Aturan: Semester 1 (Mahasiswa Baru) otomatis DISETUJUI
+	if semesterSekarang <= 1 {
 		status = model.KRSStatusDisetujui
 	}
 
@@ -144,3 +136,117 @@ func (s *Service) DropKelas(ctx context.Context, userID uuid.UUID, krsID string)
 
 	return s.repo.DeleteKRS(ctx, krsID, mhs.ID.String())
 }
+
+// GetProfilKRS mengambil profil lengkap mahasiswa untuk form KRS
+func (s *Service) GetProfilKRS(ctx context.Context, userID uuid.UUID) (*ProfilKRS, error) {
+	mhs, err := s.mahasiswaRepo.GetByUserID(ctx, userID.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get student info: %w", err)
+	}
+
+	// Auto-assign dosen wali berdasarkan prodi jika belum punya
+	if mhs.DosenWaliID == nil {
+		_ = s.repo.GetAutoDosenWali(ctx, mhs.ID.String(), mhs.ProgramStudi)
+	}
+
+	// Ambil profil dasar dari database (sudah include nama dosen wali dari JOIN)
+	profil, err := s.repo.GetProfilKRS(ctx, mhs.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	// Hitung semester sekarang berdasarkan angkatan
+	semesterSekarang, semesterAkademik, semesterSebelumnya := hitungSemester(mhs.Angkatan)
+	profil.SemesterSekarang = semesterSekarang
+	profil.SemesterAkademik = semesterAkademik
+
+	// Ambil IPS semester lalu
+	profil.IPSSemesterLalu = s.repo.GetIPSSemesterLalu(ctx, mhs.ID.String(), semesterSebelumnya)
+
+	// Hitung max SKS berdasarkan IPS dan angkatan
+	profil.MaxSKS = hitungMaxSKS(semesterSekarang, profil.IPSSemesterLalu, mhs.IzinKRS)
+
+	return profil, nil
+}
+
+// hitungSemester menghitung semester saat ini dari angkatan mahasiswa
+// Mengembalikan: nomor semester, string semester akademik, semester akademik sebelumnya
+func hitungSemester(angkatan int) (int, string, string) {
+	now := time.Now()
+	tahunSekarang := now.Year()
+	bulanSekarang := now.Month()
+
+	// Ganjil: Agustus-Januari (bulan 8-12 dan 1)
+	// Genap: Februari-Juli (bulan 2-7)
+	isGenap := bulanSekarang >= 2 && bulanSekarang <= 7
+
+	// Hitung berapa tahun sejak masuk
+	tahunAjaran := tahunSekarang
+	if !isGenap {
+		// Ganjil: tahun ajaran dimulai dari tahun ini
+		if bulanSekarang >= 8 {
+			tahunAjaran = tahunSekarang
+		} else {
+			tahunAjaran = tahunSekarang - 1
+		}
+	} else {
+		tahunAjaran = tahunSekarang - 1
+	}
+
+	tahunKe := tahunAjaran - angkatan + 1
+	if tahunKe < 1 {
+		tahunKe = 1
+	}
+
+	var semesterSekarang int
+	if isGenap {
+		semesterSekarang = (tahunKe * 2)
+	} else {
+		semesterSekarang = (tahunKe * 2) - 1
+	}
+
+	// Format string semester akademik
+	var semesterAkademik, semesterSebelumnya string
+	if isGenap {
+		semesterAkademik = fmt.Sprintf("%d/%d Genap", tahunAjaran, tahunAjaran+1)
+		semesterSebelumnya = fmt.Sprintf("%d/%d Ganjil", tahunAjaran, tahunAjaran+1)
+	} else {
+		semesterAkademik = fmt.Sprintf("%d/%d Ganjil", tahunAjaran, tahunAjaran+1)
+		if semesterSekarang > 1 {
+			semesterSebelumnya = fmt.Sprintf("%d/%d Genap", tahunAjaran-1, tahunAjaran)
+		} else {
+			semesterSebelumnya = "" // Semester 1, belum ada riwayat
+		}
+	}
+
+	return semesterSekarang, semesterAkademik, semesterSebelumnya
+}
+
+// hitungMaxSKS menentukan batas SKS berdasarkan IPS semester lalu
+// Aturan standar: Sem 1 = 20 SKS, IPS<2.0 = 18, IPS 2.0-2.49 = 20, IPS 2.5-2.99 = 22, IPS ≥ 3.0 = 24
+func hitungMaxSKS(semesterSekarang int, ipsSemesterLalu float64, izinKRS bool) int {
+	// Selalu boleh ambil penuh jika sudah dapat izin dari dosen wali
+	if izinKRS {
+		return 24
+	}
+
+	// Semester 1 (maba): standar 20 SKS, belum ada IPS
+	if semesterSekarang <= 1 {
+		return 20
+	}
+
+	// Bulatkan IPS ke 2 desimal
+	ips := math.Round(ipsSemesterLalu*100) / 100
+
+	switch {
+	case ips < 2.0:
+		return 18
+	case ips < 2.5:
+		return 20
+	case ips < 3.0:
+		return 22
+	default:
+		return 24
+	}
+}
+

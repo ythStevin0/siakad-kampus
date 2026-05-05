@@ -18,6 +18,21 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+// GetProfilKRS handles GET /api/akademik/profil-krs
+// Mengembalikan data profil mahasiswa: semester aktif, IPS, nama dosen wali, max SKS
+func (h *Handler) GetProfilKRS(w http.ResponseWriter, r *http.Request) {
+	userCtx := middleware.GetUserFromContext(r.Context())
+	userID, _ := uuid.Parse(userCtx.UserID)
+
+	profil, err := h.service.GetProfilKRS(r.Context(), userID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "Gagal mengambil profil KRS", err.Error())
+		return
+	}
+
+	response.Success(w, http.StatusOK, "Profil KRS berhasil diambil", profil)
+}
+
 // GetAvailableKelas handles GET /api/akademik/kelas/tersedia
 func (h *Handler) GetAvailableKelas(w http.ResponseWriter, r *http.Request) {
 	userCtx := middleware.GetUserFromContext(r.Context())
@@ -35,6 +50,7 @@ func (h *Handler) GetAvailableKelas(w http.ResponseWriter, r *http.Request) {
 
 	response.Success(w, http.StatusOK, "Daftar kelas tersedia berhasil diambil", list)
 }
+
 
 // GetKRS handles GET /api/akademik/krs
 func (h *Handler) GetKRS(w http.ResponseWriter, r *http.Request) {
