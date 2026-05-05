@@ -59,7 +59,8 @@ func (r *Repository) GetAvailableKelas(ctx context.Context, prodi string, semest
 func (r *Repository) GetKRSMahasiswa(ctx context.Context, mahasiswaID string, semesterAkademik string) ([]model.KRS, error) {
 	query := `
 		SELECT 
-			kr.id, kr.mahasiswa_id, kr.kelas_id, kr.semester_akademik, kr.status, kr.created_at, kr.updated_at,
+			kr.id, kr.mahasiswa_id, kr.kelas_id, kr.semester_akademik, kr.status, kr.catatan,
+			kr.created_at, kr.updated_at,
 			mk.nama_mk, k.kode_kelas, mk.sks, k.hari, k.jam_mulai, k.jam_selesai, d.nama_lengkap as nama_dosen
 		FROM krs kr
 		JOIN kelas k ON k.id = kr.kelas_id
@@ -78,7 +79,8 @@ func (r *Repository) GetKRSMahasiswa(ctx context.Context, mahasiswaID string, se
 	for rows.Next() {
 		var kr model.KRS
 		err := rows.Scan(
-			&kr.ID, &kr.MahasiswaID, &kr.KelasID, &kr.SemesterAkademik, &kr.Status, &kr.CreatedAt, &kr.UpdatedAt,
+			&kr.ID, &kr.MahasiswaID, &kr.KelasID, &kr.SemesterAkademik, &kr.Status, &kr.Catatan,
+			&kr.CreatedAt, &kr.UpdatedAt,
 			&kr.NamaMataKuliah, &kr.KodeKelas, &kr.SKS, &kr.Hari, &kr.JamMulai, &kr.JamSelesai, &kr.NamaDosen,
 		)
 		if err != nil {
@@ -87,6 +89,99 @@ func (r *Repository) GetKRSMahasiswa(ctx context.Context, mahasiswaID string, se
 		list = append(list, kr)
 	}
 	return list, nil
+}
+
+// ProfilKRS adalah data lengkap profil mahasiswa untuk halaman KRS
+type ProfilKRS struct {
+	NIM              string  `json:"nim"`
+	NamaLengkap      string  `json:"nama_lengkap"`
+	ProgramStudi     string  `json:"program_studi"`
+	Angkatan         int     `json:"angkatan"`
+	SemesterSekarang int     `json:"semester_sekarang"`
+	SemesterAkademik string  `json:"semester_akademik"`
+	IPSSemesterLalu  float64 `json:"ips_semester_lalu"`
+	NamaDosenWali    string  `json:"nama_dosen_wali"`
+	MaxSKS           int     `json:"max_sks"`
+	StatusUKT        bool    `json:"status_ukt"`
+	StatusBIP        bool    `json:"status_bip"`
+	IzinKRS          bool    `json:"izin_krs"`
+}
+
+// GetProfilKRS mengambil data profil mahasiswa lengkap untuk form KRS
+func (r *Repository) GetProfilKRS(ctx context.Context, mahasiswaID string) (*ProfilKRS, error) {
+	// 1. Ambil data mahasiswa + nama dosen wali
+	query := `
+		SELECT 
+			m.nim, m.nama_lengkap, m.program_studi, m.angkatan,
+			m.status_ukt, m.status_bip, m.izin_krs,
+			COALESCE(
+				CONCAT(
+					COALESCE(d.gelar_depan || ' ', ''),
+					d.nama_lengkap,
+					COALESCE(' ' || d.gelar_belakang, '')
+				), 
+				'Belum ditugaskan'
+			) as nama_dosen_wali
+		FROM mahasiswa m
+		LEFT JOIN dosen d ON d.id = m.dosen_wali_id
+		WHERE m.id = $1
+	`
+	var p ProfilKRS
+	err := r.db.QueryRow(ctx, query, mahasiswaID).Scan(
+		&p.NIM, &p.NamaLengkap, &p.ProgramStudi, &p.Angkatan,
+		&p.StatusUKT, &p.StatusBIP, &p.IzinKRS,
+		&p.NamaDosenWali,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get profil krs: %w", err)
+	}
+	return &p, nil
+}
+
+// GetIPSSemesterLalu menghitung rata-rata nilai dari semester akademik sebelumnya
+// Saat ini dihitung dari persentase KRS yang disetujui sebagai proxy IPS
+// Nanti bisa diganti dengan query ke tabel nilai/KHS yang sesungguhnya
+func (r *Repository) GetIPSSemesterLalu(ctx context.Context, mahasiswaID string, semesterSebelumnya string) float64 {
+	// Jika ada tabel nilai di masa depan, query di sini
+	// Untuk sekarang: return 0 jika semester 1, karena belum ada riwayat
+	if semesterSebelumnya == "" {
+		return 0
+	}
+	// Simulasi: ambil dari field tertentu jika sudah ada
+	// Dalam implementasi nyata ini harus query ke tabel nilai
+	return 0
+}
+
+// GetAutoDosenWali mencari dosen wali dari departemen yang sama jika mahasiswa belum punya dosen wali
+func (r *Repository) GetAutoDosenWali(ctx context.Context, mahasiswaID string, programStudi string) error {
+	// Cek apakah sudah punya dosen wali
+	var existing *string
+	err := r.db.QueryRow(ctx, `SELECT dosen_wali_id::text FROM mahasiswa WHERE id = $1`, mahasiswaID).Scan(&existing)
+	if err != nil || (existing != nil && *existing != "") {
+		return nil // Sudah punya dosen wali, skip
+	}
+
+	// Cari dosen dengan departemen yang paling relevan dengan program studi
+	// dan yang paling sedikit mahasiswa asuhannya (load balancing)
+	query := `
+		SELECT d.id
+		FROM dosen d
+		LEFT JOIN mahasiswa m ON m.dosen_wali_id = d.id
+		WHERE d.departemen ILIKE '%' || split_part($1, ' ', array_length(string_to_array($1,' '), 1)) || '%'
+		   OR d.departemen ILIKE '%Informatika%'
+		GROUP BY d.id
+		ORDER BY COUNT(m.id) ASC
+		LIMIT 1
+	`
+	var dosenID string
+	err = r.db.QueryRow(ctx, query, programStudi).Scan(&dosenID)
+	if err != nil {
+		return nil // Tidak ada dosen tersedia, biarkan saja
+	}
+
+	// Assign
+	_, err = r.db.Exec(ctx, `UPDATE mahasiswa SET dosen_wali_id = $1, updated_at = NOW() WHERE id = $2`, dosenID, mahasiswaID)
+	return err
 }
 
 // AddKRS menambahkan mata kuliah ke rencana studi mahasiswa

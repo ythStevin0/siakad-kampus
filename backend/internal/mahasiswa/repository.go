@@ -117,16 +117,23 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 
 func (r *Repository) GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error) {
 	query := `
-		SELECT id, user_id, nim, nama_lengkap, program_studi, angkatan, jalur_masuk, 
-		       status_ukt, status_bip, izin_krs, created_at, updated_at
-		FROM mahasiswa
-		WHERE user_id = $1
+		SELECT m.id, m.user_id, m.nim, m.nama_lengkap, m.program_studi, m.angkatan, m.jalur_masuk, 
+		       m.status_ukt, m.status_bip, m.izin_krs, m.dosen_wali_id,
+		       COALESCE(
+		         CONCAT(COALESCE(d.gelar_depan || ' ', ''), d.nama_lengkap, COALESCE(' ' || d.gelar_belakang, '')),
+		         ''
+		       ) as nama_dosen_wali,
+		       m.created_at, m.updated_at
+		FROM mahasiswa m
+		LEFT JOIN dosen d ON d.id = m.dosen_wali_id
+		WHERE m.user_id = $1
 	`
 	var m model.Mahasiswa
 	err := r.db.QueryRow(ctx, query, userID).Scan(
 		&m.ID, &m.UserID, &m.NIM, &m.NamaLengkap,
 		&m.ProgramStudi, &m.Angkatan, &m.JalurMasuk,
-		&m.StatusUKT, &m.StatusBIP, &m.IzinKRS,
+		&m.StatusUKT, &m.StatusBIP, &m.IzinKRS, &m.DosenWaliID,
+		&m.NamaDosenWali,
 		&m.CreatedAt, &m.UpdatedAt,
 	)
 	if err != nil {
@@ -134,3 +141,4 @@ func (r *Repository) GetByUserID(ctx context.Context, userID string) (*model.Mah
 	}
 	return &m, nil
 }
+
