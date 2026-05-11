@@ -8,14 +8,22 @@ interface SidebarProps {
   role: string;
   isSiakad: boolean;
   onOpenMessage: () => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export function Sidebar({ sidebarOpen, role, isSiakad, onOpenMessage }: SidebarProps) {
+export function Sidebar({ sidebarOpen, role, isSiakad, onOpenMessage, setSidebarOpen }: SidebarProps) {
   const location = useLocation();
   const [openDropdowns, setOpenDropdowns] = useState<string[]>(["Laporan Nilai", "Yudisium"]);
   const viewParam = new URLSearchParams(location.search).get("view");
 
   const toggleDropdown = (label: string) => {
+    if (!sidebarOpen) {
+      setSidebarOpen(true);
+      if (!openDropdowns.includes(label)) {
+        setOpenDropdowns(prev => [...prev, label]);
+      }
+      return;
+    }
     setOpenDropdowns(prev => 
       prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
     );

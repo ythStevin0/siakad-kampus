@@ -73,6 +73,7 @@ export default function DashboardLayout() {
       <div className="relative z-10 flex flex-1 overflow-hidden">
         <Sidebar 
           sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
           role={user?.role || "mahasiswa"}
           isSiakad={isSiakad}
           onOpenMessage={() => setIsMessageBoxOpen(true)}
