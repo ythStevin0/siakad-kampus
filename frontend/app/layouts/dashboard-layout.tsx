@@ -78,8 +78,8 @@ export default function DashboardLayout() {
           onOpenMessage={() => setIsMessageBoxOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto bg-black/20 custom-scrollbar relative">
-          <div className="max-w-[1400px] mx-auto p-4 sm:p-8">
+        <main className="flex-1 overflow-y-auto bg-black/20 custom-scrollbar relative flex flex-col">
+          <div className="max-w-[1400px] p-4 sm:p-8 flex-1">
             <Outlet context={{ user, roleLabel: roleLabelMap[user?.role || ""] }} />
           </div>
           
