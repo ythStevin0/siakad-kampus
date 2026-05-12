@@ -1,4 +1,5 @@
-import { type KRS } from "../../lib/api";
+import { useState, useEffect } from "react";
+import { type KRS, fetchProfilKRS, type ProfilKRS } from "../../lib/api";
 import { StatCard } from "./shared/StatCard";
 import { DocCard } from "./shared/DocCard";
 
@@ -8,13 +9,19 @@ interface DashboardHomeProps {
 }
 
 export function DashboardHome({ user, myKRS }: DashboardHomeProps) {
+  const [profil, setProfil] = useState<ProfilKRS | null>(null);
+
+  useEffect(() => {
+    fetchProfilKRS().then(setProfil).catch(console.error);
+  }, []);
+
   const dataMahasiswa = {
-    nama: user?.name || "Stevino Adi Nugroho",
-    nim: "3012410047",
-    prodi: "Informatika",
-    dosenWali: "Taufiqotul Bariyah, S.Kom., M.IM., MCE",
-    semesterAktif: "2025/2026 Genap",
-    semesterKe: 0,
+    nama: profil?.nama_lengkap || user?.name || "...",
+    nim: profil?.nim || "...",
+    prodi: profil?.program_studi || "...",
+    dosenWali: profil?.nama_dosen_wali || "...",
+    semesterAktif: profil?.semester_akademik || "...",
+    semesterKe: profil?.semester_sekarang ?? 0,
     ipk: 3.28,
     totalSks: 56,
     frsDiSetujui: { mk: myKRS.length, sks: myKRS.reduce((a, b) => a + b.sks, 0) },

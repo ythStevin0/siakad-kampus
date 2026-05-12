@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useOutletContext } from "react-router";
-import { searchUsers, fetchAllDosen, type SearchResult, type Dosen } from "../../lib/api";
+import { searchUsers, fetchAllDosen, fetchProfilKRS, type SearchResult, type Dosen, type ProfilKRS } from "../../lib/api";
 
 type OutletContext = { user: { email: string; role: string; name: string } | null; roleLabel: string };
 
@@ -9,11 +9,16 @@ export default function CariUser() {
   const [query, setQuery] = useState("");
   const [hasil, setHasil] = useState<SearchResult[]>([]);
   const [dosenList, setDosenList] = useState<Dosen[]>([]);
+  const [profil, setProfil] = useState<ProfilKRS | null>(null);
   const [searching, setSearching] = useState(false);
   const [loadingDosen, setLoadingDosen] = useState(true);
 
-  // Ambil semua dosen saat halaman pertama dibuka
+  // Ambil profil KRS (sama seperti KRSForm) untuk mendapatkan program studi yang akurat,
+  // lalu ambil dosen sesuai departemen — API sudah otomatis memfilter berdasarkan mahasiswa yang login
   useEffect(() => {
+    fetchProfilKRS()
+      .then(setProfil)
+      .catch(() => {});
     fetchAllDosen()
       .then(setDosenList)
       .catch(() => setDosenList([]))
@@ -130,7 +135,9 @@ export default function CariUser() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
             <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
           </svg>
-          <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Dosen Departemen</h2>
+          <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">
+            Dosen Departemen {profil?.program_studi ? `- ${profil.program_studi}` : ""}
+          </h2>
         </div>
 
         {loadingDosen ? (
