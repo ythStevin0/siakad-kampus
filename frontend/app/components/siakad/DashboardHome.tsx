@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { NavLink } from "react-router";
 import { type KRS, fetchProfilKRS, type ProfilKRS } from "../../lib/api";
 import { StatCard } from "./shared/StatCard";
 import { DocCard } from "./shared/DocCard";
@@ -29,18 +30,29 @@ export function DashboardHome({ user, myKRS }: DashboardHomeProps) {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {/* Page Header & Breadcrumb - Masterpiece Style */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#1ea39e]" />
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Universitas Internasional Semen Indonesia</span>
-        </div>
-        <h1 className="text-3xl font-black text-zinc-100 tracking-tight">DASHBOARD <span className="text-[#1ea39e]">MAHASISWA</span></h1>
-        <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1">
-          <span>Home</span>
-          <span className="text-[#1ea39e]/50">&rsaquo;</span>
-          <span className="text-zinc-400">Dashboard</span>
+      <div className="flex items-center gap-4">
+        <NavLink
+          to="/dashboard"
+          className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all shadow-2xl backdrop-blur-xl shrink-0"
+          title="Kembali ke Gapura UISI"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-0.5">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </NavLink>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#1ea39e]" />
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Universitas Internasional Semen Indonesia</span>
+          </div>
+          <h1 className="text-3xl font-black text-zinc-100 tracking-tight">DASHBOARD <span className="text-[#1ea39e]">MAHASISWA</span></h1>
+          <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1">
+            <span>Home</span>
+            <span className="text-[#1ea39e]/50">&rsaquo;</span>
+            <span className="text-zinc-400">Dashboard</span>
+          </div>
         </div>
       </div>
 
