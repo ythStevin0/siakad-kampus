@@ -52,15 +52,16 @@ export default function SIAKADContainer() {
   if (user?.role === "dosen") {
     return (
       <div className="relative pt-8">
-        <div className="absolute top-0 right-0 no-print z-50">
+        <div className="absolute top-0 right-0 no-print z-50 flex items-center gap-3">
+          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity">KEMBALI KE GAPURA</span>
           <a 
             href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/60 hover:bg-[#1ea39e]/20 border border-white/10 hover:border-[#1ea39e]/50 text-[10px] font-black text-zinc-400 hover:text-[#1ea39e] transition-all backdrop-blur-xl group shadow-2xl"
+            className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all shadow-2xl backdrop-blur-xl"
+            title="KEMBALI KE GAPURA UISI"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:-translate-x-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-0.5">
               <path d="m15 18-6-6 6-6"/>
             </svg>
-            KEMBALI KE GAPURA UISI
           </a>
         </div>
         <DosenWaliPortal token={authToken} />
@@ -143,15 +144,15 @@ export default function SIAKADContainer() {
       <div className="absolute top-0 right-0 no-print z-50">
         <a 
           href="/dashboard"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/60 hover:bg-[#1ea39e]/20 border border-white/10 hover:border-[#1ea39e]/50 text-[10px] font-black text-zinc-400 hover:text-[#1ea39e] transition-all backdrop-blur-xl group shadow-2xl"
+          className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all shadow-2xl backdrop-blur-xl"
+          title="KEMBALI KE GAPURA UISI"
         >
           <svg 
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" 
-            className="transition-transform group-hover:-translate-x-1"
+            width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" 
+            className="transition-transform group-hover:-translate-x-0.5"
           >
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          KEMBALI KE GAPURA UISI
         </a>
       </div>
       
