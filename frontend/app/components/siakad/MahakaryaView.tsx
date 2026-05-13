@@ -459,6 +459,7 @@ export function MahakaryaView() {
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const filtered = PROJECTS.filter((p) => {
     const matchCat = activeCategory === "Semua" || p.category === activeCategory;
@@ -468,6 +469,26 @@ export function MahakaryaView() {
 
   if (selectedProject) {
     return <DetailView project={selectedProject} onBack={() => setSelectedProject(null)} />;
+  }
+
+  if (showRegistration) {
+    return (
+      <div className="min-h-screen -m-8 p-8 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={() => setShowRegistration(false)} className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">PENDAFTARAN KARYA</h1>
+        </div>
+        <div className="max-w-2xl mx-auto py-20 text-center space-y-4 bg-white/0.02 border border-white/5 rounded-3xl backdrop-blur-xl">
+          <div className="w-16 h-16 rounded-full bg-[#1ea39e]/20 flex items-center justify-center mx-auto text-[#1ea39e]">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Formulir Pendaftaran</h2>
+          <p className="text-zinc-500 text-sm max-w-sm mx-auto">Fitur unggah karya sedang disiapkan. Segera hadir untuk seluruh mahasiswa UISI.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -494,9 +515,18 @@ export function MahakaryaView() {
               <p className="text-xs text-zinc-500 mt-0.5">Karya Terbaik Mahasiswa UISI</p>
             </div>
           </div>
-          <div className="relative hidden sm:block">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" placeholder="Cari karya atau mahasiswa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none w-64" />
+          <div className="flex items-center gap-3">
+            <div className="relative hidden lg:block">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" placeholder="Cari karya atau mahasiswa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none w-64" />
+            </div>
+            <button 
+              onClick={() => setShowRegistration(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:rotate-90"><path d="M12 5v14M5 12h14"/></svg>
+              Daftarkan Karya
+            </button>
           </div>
         </div>
         <div className="flex gap-2 mt-5 overflow-x-auto pb-1 no-scrollbar">
