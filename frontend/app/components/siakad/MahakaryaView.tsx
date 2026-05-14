@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useOutletContext } from "react-router";
 
 // ==========================================
 // DATA TYPES
@@ -678,7 +678,10 @@ function FeaturedPanel({ project, onViewDetails }: { project: Project; onViewDet
 // ==========================================
 const CATEGORIES = ["Semua", "Software & Digital", "Bisnis & Startup", "Desain & Kreatif", "Logistik & Industri", "Sains & Energi", "Sosial & Humaniora"];
 
+// = ... (existing interfaces and data)
+
 export function MahakaryaView() {
+  const { user } = useOutletContext<{ user: any }>();
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -699,7 +702,7 @@ export function MahakaryaView() {
     return <RegistrationForm onBack={() => setShowRegistration(false)} />;
   }
 
-  if (showDosenApproval) {
+  if (showDosenApproval && user?.role === "dosen") {
     return <DosenApprovalView onBack={() => setShowDosenApproval(false)} />;
   }
 
@@ -732,20 +735,24 @@ export function MahakaryaView() {
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input type="text" placeholder="Cari karya atau mahasiswa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none w-64" />
             </div>
-            <button 
-              onClick={() => setShowDosenApproval(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[11px] font-black text-zinc-400 hover:text-[#1ea39e] uppercase tracking-widest transition-all"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
-              Portal Dosen Wali
-            </button>
-            <button 
-              onClick={() => setShowRegistration(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:rotate-90"><path d="M12 5v14M5 12h14"/></svg>
-              Daftarkan Karya
-            </button>
+            {user?.role === "dosen" && (
+              <button 
+                onClick={() => setShowDosenApproval(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[11px] font-black text-zinc-400 hover:text-[#1ea39e] uppercase tracking-widest transition-all"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
+                Portal Dosen Wali
+              </button>
+            )}
+            {user?.role === "mahasiswa" && (
+              <button 
+                onClick={() => setShowRegistration(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:rotate-90"><path d="M12 5v14M5 12h14"/></svg>
+                Daftarkan Karya
+              </button>
+            )}
           </div>
         </div>
         <div className="flex gap-2 mt-5 overflow-x-auto pb-1 no-scrollbar">
