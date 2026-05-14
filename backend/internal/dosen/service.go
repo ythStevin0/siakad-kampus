@@ -58,3 +58,10 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 	}
 	return s.repo.Delete(ctx, id)
 }
+
+func (s *Service) GetDosenByUserID(ctx context.Context, userID string) (*model.Dosen, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("user ID tidak valid")
+	}
+	return s.repo.GetDosenByUserID(ctx, userID)
+}

@@ -143,3 +143,21 @@ func (r *Repository) GetByDepartemen(ctx context.Context, departemen string) ([]
 	}
 	return list, nil
 }
+
+func (r *Repository) GetDosenByUserID(ctx context.Context, userID string) (*model.Dosen, error) {
+	query := `
+		SELECT id, user_id, nidn, nama_lengkap, gelar_depan, gelar_belakang, departemen, created_at, updated_at
+		FROM dosen
+		WHERE user_id = $1
+	`
+	var d model.Dosen
+	err := r.db.QueryRow(ctx, query, userID).Scan(
+		&d.ID, &d.UserID, &d.NIDN, &d.NamaLengkap,
+		&d.GelarDepan, &d.GelarBelakang, &d.Departemen,
+		&d.CreatedAt, &d.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dosen by user ID: %w", err)
+	}
+	return &d, nil
+}

@@ -18,6 +18,7 @@ import (
 	"siakad/backend/internal/berita"
 	"siakad/backend/internal/dosen"
 	"siakad/backend/internal/dosenWali"
+	"siakad/backend/internal/mahakarya"
 	"siakad/backend/internal/mahasiswa"
 	"siakad/backend/internal/middleware"
 	"siakad/backend/internal/model"
@@ -76,6 +77,13 @@ func main() {
 	dosenRepo := dosen.NewRepository(db)
 	dosenService := dosen.NewService(dosenRepo)
 	dosenHandler := dosen.NewHandler(dosenService, mahasiswaService, dosenWaliService, logger)
+
+	// Mahakarya
+	mahakaryaRepo := mahakarya.NewRepository(db)
+	mahakaryaService := mahakarya.NewService(mahakaryaRepo, mahasiswaService, dosenService)
+	mahakaryaHandler := mahakarya.NewHandler(mahakaryaService, logger)
+
+	// 5. Init router
 
 	// Pesan
 	pesanRepo := pesan.NewRepository(db)
@@ -219,6 +227,21 @@ func main() {
 		r.Put("/wali/krs/{id}/approve", dosenWaliHandler.ApproveKRS)
 		r.Put("/wali/krs/{id}/reject", dosenWaliHandler.RejectKRS)
 		r.Put("/wali/mahasiswa/{mahasiswaId}/krs/approve-all", dosenWaliHandler.ApproveAllKRS)
+
+		// Review Mahakarya
+		r.Get("/wali/mahasiswa/mahakarya", mahakaryaHandler.GetToReview)
+		r.Put("/wali/mahasiswa/mahakarya/{id}/review", mahakaryaHandler.Review)
+	})
+
+	// 12. Route Mahakarya (Mahasiswa & Public)
+	r.Route("/api/mahakarya", func(r chi.Router) {
+		r.Get("/gallery", mahakaryaHandler.GetGallery)
+		
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
+			r.Post("/submit", mahakaryaHandler.Submit)
+			r.Get("/my", mahakaryaHandler.GetMySubmissions)
+		})
 	})
 
 	// 11. Start Server

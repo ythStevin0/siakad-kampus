@@ -202,18 +202,44 @@ function CategoryBadge({ label }: { label: string }) {
 // ==========================================
 // REGISTRATION FORM COMPONENT
 // ==========================================
-function RegistrationForm({ onBack }: { onBack: () => void }) {
+function RegistrationForm({ onBack, token }: { onBack: () => void; token: string }) {
   const [formData, setFormData] = useState({
     title: "",
     category: "",
     description: "",
     link: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Karya berhasil dikirim! Menunggu persetujuan Dosen Wali.");
-    onBack();
+    setIsSubmitting(true);
+    
+    try {
+      const res = await fetch("http://localhost:8080/api/mahakarya/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          category: formData.category,
+          description: formData.description,
+          portfolio_url: formData.link
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal mengirim karya");
+
+      alert("Karya berhasil dikirim! Menunggu persetujuan Dosen Wali.");
+      onBack();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -321,9 +347,10 @@ function RegistrationForm({ onBack }: { onBack: () => void }) {
 
             <button 
               type="submit"
-              className="w-full py-5 rounded-2xl bg-[#1ea39e] hover:bg-[#17888a] text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-[#1ea39e]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              disabled={isSubmitting}
+              className="w-full py-5 rounded-2xl bg-[#1ea39e] hover:bg-[#17888a] disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-[#1ea39e]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              Kirim ke Dosen Wali
+              {isSubmitting ? "MENGIRIM..." : "Kirim ke Dosen Wali"}
             </button>
           </div>
         </form>
@@ -335,15 +362,47 @@ function RegistrationForm({ onBack }: { onBack: () => void }) {
 // ==========================================
 // DOSEN APPROVAL VIEW COMPONENT
 // ==========================================
-function DosenApprovalView({ onBack }: { onBack: () => void }) {
-  const [submissions, setSubmissions] = useState([
-    { id: "s1", student: "Adinda Najwa", nim: "1202210045", title: "Sustainable Coffee Model", date: "Hari ini", status: "Pending" },
-    { id: "s2", student: "Bambang Tri", nim: "1202210012", title: "Optimasi Rantai Pasok", date: "Kemarin", status: "Pending" },
-  ]);
+function DosenApprovalView({ onBack, token }: { onBack: () => void; token: string }) {
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAction = (id: string, action: "ACC" | "REVISI") => {
-    alert(`Karya ${id} telah di-${action}`);
-    setSubmissions(submissions.filter(s => s.id !== id));
+  const fetchSubmissions = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("http://localhost:8080/api/dosen/wali/mahakarya", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setSubmissions(data.data || []);
+    } catch (err) {
+      console.error("Gagal mengambil submisi:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, []);
+
+  const handleAction = async (id: string, action: "approved" | "rejected") => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/dosen/wali/mahakarya/${id}/review`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: action, reason: action === "rejected" ? "Perlu perbaikan data" : "" })
+      });
+
+      if (!res.ok) throw new Error("Gagal memproses review");
+      
+      alert(action === "approved" ? "Karya disetujui!" : "Revisi diminta.");
+      fetchSubmissions();
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -361,25 +420,25 @@ function DosenApprovalView({ onBack }: { onBack: () => void }) {
         <div className="px-4 py-2 rounded-xl bg-[#1ea39e]/10 border border-[#1ea39e]/20">
           <span className="text-[10px] font-black text-[#1ea39e] uppercase tracking-widest">{submissions.length} Submisi Menunggu</span>
         </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto space-y-4 pb-20">
-        {submissions.length > 0 ? (
+      </div>      <div className="max-w-5xl mx-auto space-y-4 pb-20">
+        {isLoading ? (
+          <div className="py-20 text-center text-zinc-500 uppercase text-[10px] font-black tracking-widest animate-pulse">Memuat Submisi...</div>
+        ) : submissions.length > 0 ? (
           submissions.map((sub) => (
             <div key={sub.id} className="group relative overflow-hidden rounded-3xl bg-zinc-900/40 border border-white/5 p-7 backdrop-blur-xl transition-all hover:border-white/10 shadow-xl">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500 font-black text-xl shadow-inner group-hover:text-[#1ea39e] transition-colors">
-                    {sub.student.substring(0,2).toUpperCase()}
+                    {sub.mahasiswa_nama?.substring(0,2).toUpperCase()}
                   </div>
                   <div>
                     <h3 className="text-base font-black text-white uppercase tracking-tight group-hover:text-[#1ea39e] transition-colors">{sub.title}</h3>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <p className="text-[11px] font-black text-zinc-400 uppercase tracking-0.1em">{sub.student}</p>
+                      <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.1em]">{sub.mahasiswa_nama}</p>
                       <span className="text-zinc-700 text-xs font-black">•</span>
-                      <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{sub.nim}</p>
+                      <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{sub.mahasiswa_nim}</p>
                       <span className="text-zinc-700 text-xs font-black">•</span>
-                      <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest italic">{sub.date}</p>
+                      <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest italic">{new Date(sub.created_at).toLocaleDateString("id-ID")}</p>
                     </div>
                   </div>
                 </div>
@@ -389,13 +448,13 @@ function DosenApprovalView({ onBack }: { onBack: () => void }) {
                     Detail
                   </button>
                   <button 
-                    onClick={() => handleAction(sub.id, "REVISI")}
+                    onClick={() => handleAction(sub.id, "rejected")}
                     className="px-5 py-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em] hover:bg-rose-500/10 transition-all"
                   >
                     Revisi
                   </button>
                   <button 
-                    onClick={() => handleAction(sub.id, "ACC")}
+                    onClick={() => handleAction(sub.id, "approved")}
                     className="px-10 py-3 rounded-2xl bg-[#1ea39e] text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#1ea39e]/20 hover:bg-[#17888a] transition-all active:scale-[0.98]"
                   >
                     ACC KARYA
@@ -681,12 +740,15 @@ const CATEGORIES = ["Semua", "Software & Digital", "Bisnis & Startup", "Desain &
 // = ... (existing interfaces and data)
 
 export function MahakaryaView() {
-  const { user } = useOutletContext<{ user: any }>();
+  const { user, token } = useOutletContext<{ user: any; token: string }>();
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRegistration, setShowRegistration] = useState(false);
   const [showDosenApproval, setShowDosenApproval] = useState(false);
+
+  // Fallback token if not in context (for safety)
+  const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "");
 
   const filtered = PROJECTS.filter((p) => {
     const matchCat = activeCategory === "Semua" || p.category === activeCategory;
@@ -699,11 +761,11 @@ export function MahakaryaView() {
   }
 
   if (showRegistration) {
-    return <RegistrationForm onBack={() => setShowRegistration(false)} />;
+    return <RegistrationForm onBack={() => setShowRegistration(false)} token={authToken} />;
   }
 
   if (showDosenApproval && user?.role === "dosen") {
-    return <DosenApprovalView onBack={() => setShowDosenApproval(false)} />;
+    return <DosenApprovalView onBack={() => setShowDosenApproval(false)} token={authToken} />;
   }
 
   return (
