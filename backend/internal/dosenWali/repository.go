@@ -235,3 +235,41 @@ func (r *Repository) GetSummary(ctx context.Context, dosenID string) (*DosenSumm
 	}
 	return &s, nil
 }
+// GetUnassignedByDept mengambil mahasiswa yang belum punya dosen wali di departemen tertentu
+func (r *Repository) GetUnassignedByDept(ctx context.Context, dept string) ([]string, error) {
+	query := `SELECT id FROM mahasiswa WHERE dosen_wali_id IS NULL AND program_studi = $1`
+	rows, err := r.db.Query(ctx, query, dept)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
+// GetLecturerWithMinStudents mencari dosen di departemen X yang punya mahasiswa bimbingan paling sedikit
+func (r *Repository) GetLecturerWithMinStudents(ctx context.Context, dept string) (string, error) {
+	query := `
+		SELECT d.id
+		FROM dosen d
+		LEFT JOIN mahasiswa m ON m.dosen_wali_id = d.id
+		WHERE d.departemen = $1
+		GROUP BY d.id
+		ORDER BY COUNT(m.id) ASC
+		LIMIT 1
+	`
+	var id string
+	err := r.db.QueryRow(ctx, query, dept).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}

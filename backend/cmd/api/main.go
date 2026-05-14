@@ -67,10 +67,15 @@ func main() {
 	mahasiswaService := mahasiswa.NewService(mahasiswaRepo)
 	mahasiswaHandler := mahasiswa.NewHandler(mahasiswaService, logger)
 
+	// Dosen Wali
+	dosenWaliRepo := dosenWali.NewRepository(db)
+	dosenWaliService := dosenWali.NewService(dosenWaliRepo)
+	dosenWaliHandler := dosenWali.NewHandler(dosenWaliService, logger)
+
 	// Dosen
 	dosenRepo := dosen.NewRepository(db)
 	dosenService := dosen.NewService(dosenRepo)
-	dosenHandler := dosen.NewHandler(dosenService, mahasiswaService, logger)
+	dosenHandler := dosen.NewHandler(dosenService, mahasiswaService, dosenWaliService, logger)
 
 	// Pesan
 	pesanRepo := pesan.NewRepository(db)
@@ -88,11 +93,6 @@ func main() {
 	akademikRepo := akademik.NewRepository(db)
 	akademikService := akademik.NewService(akademikRepo, mahasiswaRepo)
 	akademikHandler := akademik.NewHandler(akademikService)
-
-	// Dosen Wali
-	dosenWaliRepo := dosenWali.NewRepository(db)
-	dosenWaliService := dosenWali.NewService(dosenWaliRepo)
-	dosenWaliHandler := dosenWali.NewHandler(dosenWaliService, logger)
 
 	// 5. Init router
 	r := chi.NewRouter()

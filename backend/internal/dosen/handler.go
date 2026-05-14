@@ -20,15 +20,26 @@ type Handler struct {
 	mahasiswaService interface {
 		GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error)
 	}
+	dosenWaliService interface {
+		AutoAssignByDept(ctx context.Context, dept string) (int, error)
+	}
 	logger *zap.Logger
 }
 
-func NewHandler(service *Service, mahasiswaService interface {
-	GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error)
-}, logger *zap.Logger) *Handler {
+func NewHandler(
+	service *Service,
+	mahasiswaService interface {
+		GetByUserID(ctx context.Context, userID string) (*model.Mahasiswa, error)
+	},
+	dosenWaliService interface {
+		AutoAssignByDept(ctx context.Context, dept string) (int, error)
+	},
+	logger *zap.Logger,
+) *Handler {
 	return &Handler{
 		service:          service,
 		mahasiswaService: mahasiswaService,
+		dosenWaliService: dosenWaliService,
 		logger:           logger,
 	}
 }
@@ -104,6 +115,14 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		h.logger.Error("Failed to create dosen", zap.Error(err))
 		response.Error(w, http.StatusInternalServerError, "Gagal mendaftarkan dosen", err.Error())
 		return
+	}
+
+	// Trigger Auto Assign untuk mahasiswa yang belum punya wali di departemen ini
+	assignedCount, _ := h.dosenWaliService.AutoAssignByDept(r.Context(), d.Departemen)
+	if assignedCount > 0 {
+		h.logger.Info("Auto-assigned students to new lecturer", 
+			zap.String("dept", d.Departemen), 
+			zap.Int("count", assignedCount))
 	}
 
 	response.Success(w, http.StatusCreated, "Dosen berhasil didaftarkan", d)
