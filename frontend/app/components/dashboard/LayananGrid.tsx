@@ -6,9 +6,8 @@ interface AppCard {
   label: string;
   to: string;
   icon: ReactNode;
-  color: string;
-  glowColor: string;
-  textColor: string;
+  color: string; // Base background color (filled)
+  accentColor: string; // Text and icon color
 }
 
 const appCards: AppCard[] = [
@@ -23,9 +22,8 @@ const appCards: AppCard[] = [
         <line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/>
       </svg>
     ),
-    color: "group-hover:border-blue-500/50",
-    glowColor: "bg-blue-500/20",
-    textColor: "text-blue-400",
+    color: "bg-blue-600/20",
+    accentColor: "text-blue-400",
   },
   {
     id: "kehadiran",
@@ -38,9 +36,8 @@ const appCards: AppCard[] = [
         <path d="m9 16 2 2 4-4"/>
       </svg>
     ),
-    color: "group-hover:border-emerald-500/50",
-    glowColor: "bg-emerald-500/20",
-    textColor: "text-emerald-400",
+    color: "bg-emerald-600/20",
+    accentColor: "text-emerald-400",
   },
   {
     id: "peminjaman",
@@ -52,9 +49,8 @@ const appCards: AppCard[] = [
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
     ),
-    color: "group-hover:border-orange-500/50",
-    glowColor: "bg-orange-500/20",
-    textColor: "text-orange-400",
+    color: "bg-orange-600/20",
+    accentColor: "text-orange-400",
   },
   {
     id: "repository",
@@ -65,9 +61,8 @@ const appCards: AppCard[] = [
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
       </svg>
     ),
-    color: "group-hover:border-amber-500/50",
-    glowColor: "bg-amber-500/20",
-    textColor: "text-amber-400",
+    color: "bg-amber-600/20",
+    accentColor: "text-amber-400",
   },
   {
     id: "uisilink",
@@ -80,9 +75,8 @@ const appCards: AppCard[] = [
         <path d="M8 11h8"/>
       </svg>
     ),
-    color: "group-hover:border-cyan-500/50",
-    glowColor: "bg-cyan-500/20",
-    textColor: "text-cyan-400",
+    color: "bg-cyan-600/20",
+    accentColor: "text-cyan-400",
   },
   {
     id: "uisipay",
@@ -93,17 +87,16 @@ const appCards: AppCard[] = [
         <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><line x1="7" x2="7.01" y1="15" y2="15"/><line x1="11" x2="11.01" y1="15" y2="15"/>
       </svg>
     ),
-    color: "group-hover:border-yellow-500/50",
-    glowColor: "bg-yellow-500/20",
-    textColor: "text-yellow-400",
+    color: "bg-yellow-600/20",
+    accentColor: "text-yellow-400",
   },
 ];
 
 export default function LayananGrid() {
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-5 pt-4">
       <div className="flex items-center gap-3 px-1">
-        <div className="w-1.5 h-4 bg-zinc-700 rounded-full" />
+        <div className="w-1.5 h-4 bg-[#1ea39e] rounded-full shadow-[0_0_10px_rgba(30,163,158,0.5)]" />
         <h2 className="text-[10px] font-black tracking-[0.3em] text-zinc-500 uppercase">Aplikasi & Layanan</h2>
       </div>
       
@@ -112,21 +105,25 @@ export default function LayananGrid() {
           <NavLink
             key={card.id}
             to={card.to}
-            className={`group relative flex flex-col items-center justify-center gap-4 p-6 rounded-3xl bg-zinc-900/40 border border-white/5 backdrop-blur-xl transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] shadow-xl ${card.color}`}
+            className="group relative flex flex-col items-center justify-center gap-4 p-7 rounded-3xl bg-zinc-900/60 border border-white/5 backdrop-blur-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] shadow-xl"
           >
-            {/* Hover Glow Accent */}
-            <div className={`absolute inset-0 ${card.glowColor} opacity-0 group-hover:opacity-100 blur-2xl transition-opacity rounded-3xl`} />
+            {/* The Colored Background Panels (Split Curtain Reveal) */}
+            <div className="absolute inset-0 z-0 flex pointer-events-none">
+              <div className={`w-1/2 h-full ${card.color} transition-transform duration-500 ease-out group-hover:-translate-x-full`} />
+              <div className={`w-1/2 h-full ${card.color} transition-transform duration-500 ease-out group-hover:translate-x-full`} />
+            </div>
             
-            <div className={`relative z-10 ${card.textColor} transition-transform duration-300 group-hover:scale-110`}>
+            {/* Content Container */}
+            <div className={`relative z-10 ${card.accentColor} transition-transform duration-300 group-hover:scale-110`}>
               {card.icon}
             </div>
             
-            <p className="relative z-10 text-[10px] font-black text-zinc-400 text-center leading-none uppercase tracking-tighter group-hover:text-zinc-100 transition-colors">
+            <p className="relative z-10 text-[10px] font-black text-zinc-100 text-center leading-none uppercase tracking-tighter transition-all duration-300 group-hover:tracking-widest">
               {card.label}
             </p>
             
-            {/* Bottom Accent Line */}
-            <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 ${card.textColor.replace('text-', 'bg-')} group-hover:w-1/2 transition-all duration-300 rounded-full opacity-50`} />
+            {/* Border Accent Reveal */}
+            <div className={`absolute inset-0 border-2 border-transparent group-hover:border-white/10 transition-all duration-500 rounded-3xl pointer-events-none`} />
           </NavLink>
         ))}
       </div>
