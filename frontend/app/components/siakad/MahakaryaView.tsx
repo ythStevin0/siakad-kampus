@@ -333,6 +333,96 @@ function RegistrationForm({ onBack }: { onBack: () => void }) {
 }
 
 // ==========================================
+// DOSEN APPROVAL VIEW COMPONENT
+// ==========================================
+function DosenApprovalView({ onBack }: { onBack: () => void }) {
+  const [submissions, setSubmissions] = useState([
+    { id: "s1", student: "Adinda Najwa", nim: "1202210045", title: "Sustainable Coffee Model", date: "Hari ini", status: "Pending" },
+    { id: "s2", student: "Bambang Tri", nim: "1202210012", title: "Optimasi Rantai Pasok", date: "Kemarin", status: "Pending" },
+  ]);
+
+  const handleAction = (id: string, action: "ACC" | "REVISI") => {
+    alert(`Karya ${id} telah di-${action}`);
+    setSubmissions(submissions.filter(s => s.id !== id));
+  };
+
+  return (
+    <div className="min-h-screen -m-8 p-8 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">PERSETUJUAN KARYA</h1>
+            <p className="text-[10px] text-[#1ea39e] font-black uppercase tracking-widest mt-0.5">Portal Dosen Wali</p>
+          </div>
+        </div>
+        <div className="px-4 py-2 rounded-xl bg-[#1ea39e]/10 border border-[#1ea39e]/20">
+          <span className="text-[10px] font-black text-[#1ea39e] uppercase tracking-widest">{submissions.length} Submisi Menunggu</span>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto space-y-4 pb-20">
+        {submissions.length > 0 ? (
+          submissions.map((sub) => (
+            <div key={sub.id} className="group relative overflow-hidden rounded-3xl bg-zinc-900/40 border border-white/5 p-7 backdrop-blur-xl transition-all hover:border-white/10 shadow-xl">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500 font-black text-xl shadow-inner group-hover:text-[#1ea39e] transition-colors">
+                    {sub.student.substring(0,2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white uppercase tracking-tight group-hover:text-[#1ea39e] transition-colors">{sub.title}</h3>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <p className="text-[11px] font-black text-zinc-400 uppercase tracking-0.1em">{sub.student}</p>
+                      <span className="text-zinc-700 text-xs font-black">•</span>
+                      <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{sub.nim}</p>
+                      <span className="text-zinc-700 text-xs font-black">•</span>
+                      <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest italic">{sub.date}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 z-10">
+                  <button className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
+                    Detail
+                  </button>
+                  <button 
+                    onClick={() => handleAction(sub.id, "REVISI")}
+                    className="px-5 py-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em] hover:bg-rose-500/10 transition-all"
+                  >
+                    Revisi
+                  </button>
+                  <button 
+                    onClick={() => handleAction(sub.id, "ACC")}
+                    className="px-10 py-3 rounded-2xl bg-[#1ea39e] text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#1ea39e]/20 hover:bg-[#17888a] transition-all active:scale-[0.98]"
+                  >
+                    ACC KARYA
+                  </button>
+                </div>
+              </div>
+              
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#1ea39e]/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          ))
+        ) : (
+          <div className="py-24 text-center space-y-5 bg-white/0.02 border border-white/5 rounded-3xl backdrop-blur-sm">
+             <div className="w-20 h-20 rounded-full bg-[#1ea39e]/10 flex items-center justify-center mx-auto text-[#1ea39e]">
+               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+             </div>
+             <div className="space-y-1">
+               <h3 className="text-lg font-black text-zinc-300 uppercase tracking-widest">Selesai!</h3>
+               <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Semua submisi mahasiswa bimbingan telah diproses.</p>
+             </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // DETAIL VIEW (Full Detailed Layout)
 // ==========================================
 function DetailView({ project, onBack }: { project: Project; onBack: () => void }) {
@@ -593,6 +683,7 @@ export function MahakaryaView() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRegistration, setShowRegistration] = useState(false);
+  const [showDosenApproval, setShowDosenApproval] = useState(false);
 
   const filtered = PROJECTS.filter((p) => {
     const matchCat = activeCategory === "Semua" || p.category === activeCategory;
@@ -606,6 +697,10 @@ export function MahakaryaView() {
 
   if (showRegistration) {
     return <RegistrationForm onBack={() => setShowRegistration(false)} />;
+  }
+
+  if (showDosenApproval) {
+    return <DosenApprovalView onBack={() => setShowDosenApproval(false)} />;
   }
 
   return (
@@ -637,6 +732,13 @@ export function MahakaryaView() {
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input type="text" placeholder="Cari karya atau mahasiswa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none w-64" />
             </div>
+            <button 
+              onClick={() => setShowDosenApproval(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[11px] font-black text-zinc-400 hover:text-[#1ea39e] uppercase tracking-widest transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
+              Portal Dosen Wali
+            </button>
             <button 
               onClick={() => setShowRegistration(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
