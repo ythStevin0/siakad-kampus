@@ -434,7 +434,7 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
                   <div>
                     <h3 className="text-base font-black text-white uppercase tracking-tight group-hover:text-[#1ea39e] transition-colors">{sub.title}</h3>
                     <div className="flex items-center gap-3 mt-1.5">
-                      <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.1em]">{sub.mahasiswa_nama}</p>
+                      <p className="text-[11px] font-black text-zinc-400 uppercase tracking-tight">{sub.mahasiswa_nama}</p>
                       <span className="text-zinc-700 text-xs font-black">•</span>
                       <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{sub.mahasiswa_nim}</p>
                       <span className="text-zinc-700 text-xs font-black">•</span>
@@ -748,7 +748,7 @@ export function MahakaryaView() {
   const [showDosenApproval, setShowDosenApproval] = useState(false);
 
   // Fallback token if not in context (for safety)
-  const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("access_token") || "" : "");
+  const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("siakad_access_token") || "" : "");
 
   const filtered = PROJECTS.filter((p) => {
     const matchCat = activeCategory === "Semua" || p.category === activeCategory;

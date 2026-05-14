@@ -15,6 +15,6 @@ CREATE TABLE IF NOT EXISTS mahakarya_submissions (
 );
 
 -- Index for faster lookups by advisor and student
-CREATE INDEX idx_mahakarya_mahasiswa ON mahakarya_submissions(mahasiswa_id);
-CREATE INDEX idx_mahakarya_dosen_wali ON mahakarya_submissions(dosen_wali_id);
-CREATE INDEX idx_mahakarya_status ON mahakarya_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_mahakarya_mahasiswa ON mahakarya_submissions(mahasiswa_id);
+CREATE INDEX IF NOT EXISTS idx_mahakarya_dosen_wali ON mahakarya_submissions(dosen_wali_id);
+CREATE INDEX IF NOT EXISTS idx_mahakarya_status ON mahakarya_submissions(status);
