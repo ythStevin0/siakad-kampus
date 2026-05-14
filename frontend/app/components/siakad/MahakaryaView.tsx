@@ -200,6 +200,139 @@ function CategoryBadge({ label }: { label: string }) {
 }
 
 // ==========================================
+// REGISTRATION FORM COMPONENT
+// ==========================================
+function RegistrationForm({ onBack }: { onBack: () => void }) {
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "",
+    description: "",
+    link: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert("Karya berhasil dikirim! Menunggu persetujuan Dosen Wali.");
+    onBack();
+  };
+
+  return (
+    <div className="min-h-screen -m-8 p-8 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">PENDAFTARAN KARYA</h1>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Status: <span className="text-amber-500 font-black">Draft</span></p>
+          </div>
+        </div>
+        
+        <div className="hidden md:flex items-center gap-4 bg-white/5 border border-white/10 px-6 py-2.5 rounded-2xl">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#1ea39e] animate-pulse" />
+            <span className="text-[10px] font-black text-zinc-200 uppercase tracking-widest">Input Data</span>
+          </div>
+          <div className="w-8 h-px bg-zinc-800" />
+          <div className="flex items-center gap-2 opacity-40">
+            <div className="w-2 h-2 rounded-full bg-zinc-600" />
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Review Dosen Wali</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto pb-20">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-8 space-y-6 backdrop-blur-xl shadow-2xl">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Judul Karya Mahakarya</label>
+                <input 
+                  type="text" required
+                  placeholder="Masukkan judul inovasi Anda..."
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-zinc-100 focus:outline-none focus:border-[#1ea39e]/50 transition-all placeholder:text-zinc-700"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Kategori Departemen</label>
+                <select 
+                  required
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-zinc-300 focus:outline-none focus:border-[#1ea39e]/50 transition-all appearance-none cursor-pointer"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                >
+                  <option value="" className="bg-zinc-900">Pilih Kategori...</option>
+                  {CATEGORIES.filter(c => c !== "Semua").map(cat => (
+                    <option key={cat} value={cat} className="bg-zinc-900">{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Deskripsi & Abstrak</label>
+                <textarea 
+                  required rows={6}
+                  placeholder="Jelaskan mengenai latar belakang, solusi, dan dampak dari karya Anda..."
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-zinc-300 focus:outline-none focus:border-[#1ea39e]/50 transition-all resize-none placeholder:text-zinc-700"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-8 space-y-6 backdrop-blur-xl shadow-2xl">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Tautan Portfolio (GitHub/Drive)</label>
+                <input 
+                  type="url" required
+                  placeholder="https://..."
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-zinc-300 focus:outline-none focus:border-[#1ea39e]/50 transition-all placeholder:text-zinc-700"
+                  value={formData.link}
+                  onChange={(e) => setFormData({...formData, link: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Poster Utama</label>
+                <div className="group relative border-2 border-dashed border-white/10 rounded-3xl p-10 text-center space-y-3 hover:border-[#1ea39e]/40 transition-all cursor-pointer bg-white/0.01">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-zinc-500 group-hover:text-[#1ea39e] transition-colors">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                  </div>
+                  <p className="text-[11px] font-black text-zinc-400 uppercase tracking-tighter">Unggah Thumbnail Karya</p>
+                  <p className="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">PNG / JPG (Maks. 5MB)</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-500/5 border border-amber-500/10 rounded-3xl p-6 flex gap-4">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              </div>
+              <p className="text-[10px] text-amber-500/80 font-bold uppercase leading-relaxed tracking-tight">
+                Data akan dikirim ke portal Dosen Wali untuk diverifikasi kelayakannya sebelum dipublikasikan di Masterpiece UISI.
+              </p>
+            </div>
+
+            <button 
+              type="submit"
+              className="w-full py-5 rounded-2xl bg-[#1ea39e] hover:bg-[#17888a] text-white text-xs font-black uppercase tracking-[0.3em] shadow-2xl shadow-[#1ea39e]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Kirim ke Dosen Wali
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // DETAIL VIEW (Full Detailed Layout)
 // ==========================================
 function DetailView({ project, onBack }: { project: Project; onBack: () => void }) {
@@ -472,23 +605,7 @@ export function MahakaryaView() {
   }
 
   if (showRegistration) {
-    return (
-      <div className="min-h-screen -m-8 p-8 animate-in slide-in-from-bottom-4 duration-500">
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => setShowRegistration(false)} className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">PENDAFTARAN KARYA</h1>
-        </div>
-        <div className="max-w-2xl mx-auto py-20 text-center space-y-4 bg-white/0.02 border border-white/5 rounded-3xl backdrop-blur-xl">
-          <div className="w-16 h-16 rounded-full bg-[#1ea39e]/20 flex items-center justify-center mx-auto text-[#1ea39e]">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-          </div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Formulir Pendaftaran</h2>
-          <p className="text-zinc-500 text-sm max-w-sm mx-auto">Fitur unggah karya sedang disiapkan. Segera hadir untuk seluruh mahasiswa UISI.</p>
-        </div>
-      </div>
-    );
+    return <RegistrationForm onBack={() => setShowRegistration(false)} />;
   }
 
   return (
