@@ -229,8 +229,8 @@ func main() {
 		r.Put("/wali/mahasiswa/{mahasiswaId}/krs/approve-all", dosenWaliHandler.ApproveAllKRS)
 
 		// Review Mahakarya
-		r.Get("/wali/mahasiswa/mahakarya", mahakaryaHandler.GetToReview)
-		r.Put("/wali/mahasiswa/mahakarya/{id}/review", mahakaryaHandler.Review)
+		r.Get("/wali/mahakarya", mahakaryaHandler.GetToReview)
+		r.Put("/wali/mahakarya/{id}/review", mahakaryaHandler.Review)
 	})
 
 	// 12. Route Mahakarya (Mahasiswa & Public)
