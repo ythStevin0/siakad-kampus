@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { useState, useEffect } from "react";
-import { logout } from "../lib/auth";
+import { logout, getAccessToken } from "../lib/auth";
 
 // Import broken-down components
 import { Header } from "../components/layout/Header";
@@ -27,7 +27,7 @@ export default function DashboardLayout() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isMessageBoxOpen, setIsMessageBoxOpen] = useState(false);
-  const user = getUserFromStorage();
+  const [user, setUser] = useState(getUserFromStorage);
   
   const roleLabelMap: Record<string, string> = {
     mahasiswa: "Mahasiswa",
@@ -36,8 +36,11 @@ export default function DashboardLayout() {
   };
 
   useEffect(() => {
-    if (!user) navigate("/login");
-  }, [user, navigate]);
+    // Re-sync user dari localStorage setiap kali halaman berpindah
+    const freshUser = getUserFromStorage();
+    setUser(freshUser);
+    if (!freshUser) navigate("/login");
+  }, [location.pathname, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -81,7 +84,8 @@ export default function DashboardLayout() {
 
         <main className="flex-1 overflow-y-auto bg-black/20 custom-scrollbar relative flex flex-col">
           <div className="max-w-[1400px] p-4 sm:p-8 flex-1">
-            <Outlet context={{ user, roleLabel: roleLabelMap[user?.role || ""] }} />
+            <Outlet context={{ user, roleLabel: roleLabelMap[user?.role || ""], token: getAccessToken() ?? "" }} />
+
           </div>
           
           <footer className="mt-auto py-6 px-8 border-t border-white/5 text-[10px] text-zinc-600 font-bold uppercase tracking-widest flex flex-col sm:flex-row justify-between items-center gap-4">
