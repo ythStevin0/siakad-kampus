@@ -235,12 +235,15 @@ func main() {
 
 	// 12. Route Mahakarya (Mahasiswa & Public)
 	r.Route("/api/mahakarya", func(r chi.Router) {
+		// Publik: siapa saja bisa lihat galeri karya yang sudah approved
 		r.Get("/gallery", mahakaryaHandler.GetGallery)
-		
+
+		// Terproteksi: hanya mahasiswa yang login
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Authenticate(os.Getenv("JWT_SECRET"), logger))
 			r.Post("/submit", mahakaryaHandler.Submit)
 			r.Get("/my", mahakaryaHandler.GetMySubmissions)
+			r.Put("/{id}", mahakaryaHandler.UpdateSubmission) // Re-submit karya yang direvisi
 		})
 	})
 

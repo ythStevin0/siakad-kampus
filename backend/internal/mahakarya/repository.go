@@ -91,6 +91,24 @@ func (r *Repository) GetByDosenWali(ctx context.Context, dosenID string) ([]mode
 	return list, nil
 }
 
+// Update memperbarui karya yang sebelumnya direvisi dan me-reset statusnya ke pending
+func (r *Repository) Update(ctx context.Context, id string, mahasiswaID string, title, category, description, portfolioURL string) error {
+	query := `
+		UPDATE mahakarya_submissions
+		SET title = $1, category = $2, description = $3, portfolio_url = $4,
+		    status = 'pending', rejection_reason = NULL, updated_at = NOW()
+		WHERE id = $5 AND mahasiswa_id = $6 AND status = 'rejected'
+	`
+	cmd, err := r.db.Exec(ctx, query, title, category, description, portfolioURL, id, mahasiswaID)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return fmt.Errorf("karya tidak ditemukan, bukan milik Anda, atau belum berstatus 'rejected'")
+	}
+	return nil
+}
+
 // UpdateStatus mengubah status persetujuan karya
 func (r *Repository) UpdateStatus(ctx context.Context, id string, dosenID string, status string, reason string) error {
 	query := `

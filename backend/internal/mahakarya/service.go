@@ -49,6 +49,15 @@ func (s *Service) SubmitKarya(ctx context.Context, userID string, req *model.Mah
 	return s.repo.Create(ctx, req)
 }
 
+// UpdateKarya memproses perbaikan karya yang direvisi oleh dosen
+func (s *Service) UpdateKarya(ctx context.Context, userID string, submissionID string, title, category, description, portfolioURL string) error {
+	m, err := s.mahasiswaRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("gagal mendapatkan profil mahasiswa: %w", err)
+	}
+	return s.repo.Update(ctx, submissionID, m.ID.String(), title, category, description, portfolioURL)
+}
+
 // GetMySubmissions mengambil riwayat karya mahasiswa yang login
 func (s *Service) GetMySubmissions(ctx context.Context, userID string) ([]model.MahakaryaSubmission, error) {
 	m, err := s.mahasiswaRepo.GetByUserID(ctx, userID)
