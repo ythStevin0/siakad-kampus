@@ -366,6 +366,8 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [revisiModal, setRevisiModal] = useState<{isOpen: boolean, submissionId: string, reason: string}>({isOpen: false, submissionId: "", reason: ""});
+  const [detailModal, setDetailModal] = useState<any>(null);
+
 
 
   const fetchSubmissions = async () => {
@@ -451,7 +453,10 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
                 </div>
                 
                 <div className="flex items-center gap-3 z-10">
-                  <button className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all">
+                  <button 
+                    onClick={() => setDetailModal(sub)}
+                    className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all"
+                  >
                     DETAIL
                   </button>
                   <button 
@@ -482,6 +487,72 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
           </div>
         )}
       </div>
+
+      {/* DETAIL MODAL */}
+      {detailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailModal(null)} />
+          <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-2xl font-black text-white uppercase tracking-tight">{detailModal.title}</h3>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="px-2 py-1 rounded-md bg-[#1ea39e]/20 text-[#1ea39e] text-[10px] font-black uppercase tracking-widest">{detailModal.category}</span>
+                  <span className="text-zinc-600">•</span>
+                  <span className="text-xs font-bold text-zinc-400">{detailModal.mahasiswa_nama} ({detailModal.mahasiswa_nim})</span>
+                </div>
+              </div>
+              <button onClick={() => setDetailModal(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {detailModal.portfolio_url && (
+                <div className="rounded-xl overflow-hidden bg-black/50 border border-white/5 aspect-video flex items-center justify-center">
+                  {/* Simulate image/portfolio display */}
+                  {detailModal.portfolio_url.match(/\.(jpeg|jpg|gif|png)$/) != null ? (
+                    <img src={detailModal.portfolio_url} alt="Portfolio" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center p-6">
+                      <svg className="w-12 h-12 text-zinc-600 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                      <a href={detailModal.portfolio_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-[#1ea39e] hover:underline break-all">{detailModal.portfolio_url}</a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Deskripsi Karya</h4>
+                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap bg-white/5 p-4 rounded-xl border border-white/5">
+                  {detailModal.description || "Tidak ada deskripsi yang dilampirkan."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-white/5">
+              <button 
+                onClick={() => {
+                  setDetailModal(null);
+                  setRevisiModal({isOpen: true, submissionId: detailModal.id, reason: ""});
+                }}
+                className="px-6 py-2.5 rounded-xl bg-rose-500/10 text-xs font-black text-rose-500 hover:bg-rose-500/20 transition-all uppercase tracking-widest"
+              >
+                Revisi
+              </button>
+              <button 
+                onClick={() => {
+                  handleAction(detailModal.id, "approved");
+                  setDetailModal(null);
+                }}
+                className="px-8 py-2.5 rounded-xl bg-[#1ea39e] text-white text-xs font-black uppercase tracking-widest hover:bg-[#17888a] transition-all shadow-lg shadow-[#1ea39e]/20"
+              >
+                ACC Karya
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* REVISI MODAL */}
       {revisiModal.isOpen && (
