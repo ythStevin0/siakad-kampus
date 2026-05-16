@@ -16,8 +16,8 @@ export const setAccessToken = (token: string | null) => {
 };
 
 export const getAccessToken = () => {
-  // Kalau di memori ada, pakai itu (lebih cepat)
-  // Kalau tidak (misal setelah refresh), ambil dari localStorage
+  // Guard: localStorage tidak tersedia saat SSR (server-side rendering)
+  if (typeof window === "undefined") return null;
   if (!accessToken) {
     accessToken = localStorage.getItem(TOKEN_KEY);
   }
