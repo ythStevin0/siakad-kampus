@@ -365,6 +365,8 @@ function RegistrationForm({ onBack, token }: { onBack: () => void; token: string
 function DosenApprovalView({ onBack, token }: { onBack: () => void; token: string }) {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [revisiModal, setRevisiModal] = useState<{isOpen: boolean, submissionId: string, reason: string}>({isOpen: false, submissionId: "", reason: ""});
+
 
   const fetchSubmissions = async () => {
     setIsLoading(true);
@@ -393,14 +395,19 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ status: action, reason: action === "rejected" ? "Perlu perbaikan data" : "" })
+        body: JSON.stringify({ status: action, reason: action === "rejected" ? revisiModal.reason : "" })
+
       });
 
       if (!res.ok) throw new Error("Gagal memproses review");
       
-      alert(action === "approved" ? "Karya disetujui!" : "Revisi diminta.");
+      alert(action === "approved" ? "Karya disetujui!" : "Revisi dikirim ke mahasiswa.");
+      if (action === "rejected") {
+        setRevisiModal({isOpen: false, submissionId: "", reason: ""});
+      }
       fetchSubmissions();
     } catch (err: any) {
+
       alert(err.message);
     }
   };
@@ -444,14 +451,14 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
                 </div>
                 
                 <div className="flex items-center gap-3 z-10">
-                  <button className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
-                    Detail
+                  <button className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all">
+                    DETAIL
                   </button>
                   <button 
-                    onClick={() => handleAction(sub.id, "rejected")}
-                    className="px-5 py-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em] hover:bg-rose-500/10 transition-all"
+                    onClick={() => setRevisiModal({isOpen: true, submissionId: sub.id, reason: ""})}
+                    className="px-5 py-3 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] hover:bg-rose-500/10 transition-all"
                   >
-                    Revisi
+                    REVISI
                   </button>
                   <button 
                     onClick={() => handleAction(sub.id, "approved")}
@@ -461,22 +468,55 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
                   </button>
                 </div>
               </div>
-              
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#1ea39e]/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           ))
         ) : (
-          <div className="py-24 text-center space-y-5 bg-white/0.02 border border-white/5 rounded-3xl backdrop-blur-sm">
-             <div className="w-20 h-20 rounded-full bg-[#1ea39e]/10 flex items-center justify-center mx-auto text-[#1ea39e]">
-               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-             </div>
-             <div className="space-y-1">
-               <h3 className="text-lg font-black text-zinc-300 uppercase tracking-widest">Selesai!</h3>
-               <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Semua submisi mahasiswa bimbingan telah diproses.</p>
-             </div>
+          <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div>
+              <p className="text-sm font-black text-zinc-300 uppercase tracking-widest">Selesai!</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">Semua submisi mahasiswa bimbingan telah diproses</p>
+            </div>
           </div>
         )}
       </div>
+
+      {/* REVISI MODAL */}
+      {revisiModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRevisiModal({isOpen: false, submissionId: "", reason: ""})} />
+          <div className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-black text-white uppercase tracking-widest mb-2">CATATAN REVISI</h3>
+            <p className="text-xs text-zinc-400 mb-6">Berikan masukan atau alasan mengapa karya ini perlu direvisi oleh mahasiswa.</p>
+            
+            <textarea
+              className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-zinc-300 focus:outline-none focus:border-rose-500/50 transition-all min-h-[120px] resize-none placeholder:text-zinc-600"
+              placeholder="Ketik catatan revisi di sini..."
+              value={revisiModal.reason}
+              onChange={(e) => setRevisiModal({...revisiModal, reason: e.target.value})}
+              autoFocus
+            />
+            
+            <div className="flex items-center justify-end gap-3 mt-8">
+              <button 
+                onClick={() => setRevisiModal({isOpen: false, submissionId: "", reason: ""})}
+                className="px-6 py-2.5 rounded-xl bg-white/5 text-xs font-bold text-zinc-400 hover:text-white transition-all uppercase tracking-widest"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={() => handleAction(revisiModal.submissionId, "rejected")}
+                disabled={!revisiModal.reason.trim()}
+                className="px-6 py-2.5 rounded-xl bg-rose-500 text-white text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Kirim Revisi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
