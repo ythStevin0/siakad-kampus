@@ -41,133 +41,6 @@ interface Project {
 }
 
 // ==========================================
-// DATA (dummy — diperluas untuk detail)
-// ==========================================
-const PROJECTS: Project[] = [
-  {
-    id: "1",
-    title: "Optimasi Rantai Pasok Semen Indonesia",
-    description: "Analisis dan pemodelan matematis untuk mengoptimalkan jalur distribusi semen guna menekan biaya logistik hingga 15% menggunakan algoritma genetika.",
-    fullDescription: `
-      Proyek ini berfokus pada tantangan logistik yang dihadapi oleh industri semen skala besar. Melalui pendekatan algoritma genetika, kami merancang model distribusi yang mempertimbangkan berbagai variabel seperti jarak, kapasitas armada, biaya bahan bakar, dan waktu pengiriman.
-      
-      Tujuan utama dari proyek ini adalah:
-      1. Menurunkan biaya operasional logistik hingga 15%.
-      2. Meningkatkan efisiensi waktu pengiriman sebesar 20%.
-      3. Memberikan rekomendasi strategis bagi manajemen dalam pengambilan keputusan rute distribusi.
-      
-      Hasil dari penelitian ini telah diuji coba pada data historis distribusi tahun 2023 dan menunjukkan performa yang sangat stabil.
-    `,
-    category: "Logistik & Industri",
-    thumbnail: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
-    rating: 5,
-    views: 1240,
-    date: "12 Mei 2024",
-    author: "Bambang Triatmojo",
-    authorDept: "Departemen Teknik Logistik",
-    authorInitials: "BT",
-    authorColor: "bg-blue-700",
-    creators: [
-      { name: "Bambang Triatmojo", dept: "Teknik Logistik", avatar: "https://i.pravatar.cc/150?u=bt", role: "Ketua Tim" },
-      { name: "Siti Aminah", dept: "Teknik Logistik", avatar: "https://i.pravatar.cc/150?u=sa", role: "Analisis Data" },
-      { name: "Rizky Pratama", dept: "Teknik Industri", avatar: "https://i.pravatar.cc/150?u=rp", role: "Pemodelan" },
-    ],
-    reviews: [
-      { id: "r1", user: "Dosen Penguji 1", avatar: "https://i.pravatar.cc/150?u=d1", rating: 5, comment: "Analisis yang sangat tajam dan aplikatif untuk industri nyata.", date: "2 jam yang lalu" },
-      { id: "r2", user: "Mahasiswa Logistik", avatar: "https://i.pravatar.cc/150?u=m1", rating: 4, comment: "Inspiratif banget buat tugas akhir saya nanti!", date: "5 jam yang lalu" },
-    ],
-  },
-  {
-    id: "2",
-    title: "Brand Identity 'Gresik Heritage'",
-    description: "Perancangan identitas visual lengkap untuk kampanye pelestarian bangunan bersejarah di Gresik melalui pendekatan desain modern namun tetap membawa unsur lokal.",
-    fullDescription: `
-      Proyek ini mengeksplorasi bagaimana identitas visual dapat membantu melestarikan bangunan bersejarah. Kami mengembangkan sistem desain yang fleksibel namun tetap menghormati akar budaya Gresik.
-      
-      Elemen yang dikembangkan meliputi:
-      - Tipografi khusus berbasis aksara lokal.
-      - Palet warna yang diambil dari warna dominan bangunan kolonial dan pesisir.
-      - Sistem ikonografi untuk penanda lokasi bersejarah.
-      
-      Kampanye ini telah dipresentasikan di depan Dinas Pariwisata dan mendapatkan apresiasi tinggi sebagai model promosi wisata budaya.
-    `,
-    category: "Desain & Kreatif",
-    thumbnail: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
-    rating: 5,
-    views: 890,
-    date: "20 Juni 2024",
-    author: "Ayu Kurnia Safitri",
-    authorDept: "Departemen Desain Komunikasi Visual",
-    authorInitials: "AK",
-    authorColor: "bg-rose-600",
-    creators: [
-      { name: "Ayu Kurnia Safitri", dept: "DKV", avatar: "https://i.pravatar.cc/150?u=aks" },
-      { name: "Rendy Wijaya", dept: "DKV", avatar: "https://i.pravatar.cc/150?u=rw" },
-    ],
-    reviews: [
-      { id: "r3", user: "Kolektor Seni", avatar: "https://i.pravatar.cc/150?u=ks", rating: 5, comment: "Visualisasinya luar biasa, sangat berkarakter.", date: "1 hari yang lalu" },
-    ],
-  },
-  {
-    id: "3",
-    title: "Submarine Scavenger",
-    description: "Submarine Scavenger adalah game bergenre Arcade, Edukasi dan endless runner yang berfokus pada pengambilan sampah di laut.",
-    fullDescription: `
-      Submarine Scavenger adalah sebuah karya interaktif yang menggabungkan hiburan dengan kesadaran lingkungan. Pemain mengendalikan kapal selam canggih untuk mengumpulkan berbagai jenis sampah plastik dan limbah di dasar samudra.
-      
-      Fitur Utama:
-      - Gameplay Arcade yang adiktif dengan kontrol responsif.
-      - Edukasi mengenai jenis-jenis sampah dan dampaknya terhadap ekosistem laut.
-      - Sistem upgrade kapal selam berdasarkan poin yang dikumpulkan.
-      
-      Karya ini diharapkan dapat menjadi media edukasi yang menyenangkan bagi anak-anak untuk lebih peduli terhadap kebersihan laut kita.
-    `,
-    category: "Software & Digital",
-    thumbnail: "https://images.unsplash.com/photo-1551244072-5d12893278bc?w=800&q=80",
-    rating: 4,
-    views: 3500,
-    date: "10 April 2024",
-    author: "Alden Muzakky Tri Vicienza",
-    authorDept: "Departemen Sistem Informasi",
-    authorInitials: "AM",
-    authorColor: "bg-emerald-600",
-    creators: [
-      { name: "Alden Muzakky", dept: "Sistem Informasi", avatar: "https://i.pravatar.cc/150?u=am" },
-      { name: "Immanuel Audrey", dept: "Sistem Informasi", avatar: "https://i.pravatar.cc/150?u=ia" },
-    ],
-    reviews: [
-      { id: "r4", user: "Gamers UISI", avatar: "https://i.pravatar.cc/150?u=g1", rating: 5, comment: "Grafiknya keren dan gameplay-nya smooth!", date: "3 hari yang lalu" },
-    ],
-  }
-];
-
-const FEATURED: Project = {
-  ...PROJECTS[0],
-  id: "featured",
-  title: "JATIMeal",
-  description: "JATIMeal merupakan aplikasi berbasis website yang menyediakan resep dan cara memasak makanan khas Jawa Timur. Aplikasi ini merupakan jawaban dari permasalahan makanan khas jawa timur yang kurang dikenal.",
-  fullDescription: `
-    JATIMeal adalah solusi digital untuk melestarikan kuliner Jawa Timur. Aplikasi ini tidak hanya menampilkan resep, tetapi juga cerita di balik setiap masakan dan rekomendasi tempat makan otentik.
-    
-    Fitur Unggulan:
-    - Peta Kuliner Interaktif Jawa Timur.
-    - Tutorial Video berkualitas tinggi.
-    - Komunitas berbagi resep antar pengguna.
-    
-    Proyek ini memenangkan Juara 1 kompetisi inovasi digital tingkat provinsi karena keberhasilannya dalam mendokumentasikan lebih dari 200 resep tradisional yang mulai langka.
-  `,
-  category: "Software & Digital",
-  thumbnail: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
-  rating: 4,
-  author: "Tim JATIMeal",
-  authorDept: "Fakultas Teknologi Informasi dan Kreatif",
-  authorInitials: "TJ",
-  authorColor: "bg-orange-700",
-  featured: true,
-  tags: ["Kuliner", "Jawa Timur", "Web App"],
-};
-
-// ==========================================
 // HELPERS
 // ==========================================
 function StarRating({ count, size = 14, activeColor = "#f59e0b" }: { count: number; size?: number; activeColor?: string }) {
@@ -211,6 +84,21 @@ function RegistrationForm({ onBack, token, initialData }: { onBack: () => void; 
   });
   const isEditMode = !!initialData;
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file maksimal 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, link: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,24 +207,43 @@ function RegistrationForm({ onBack, token, initialData }: { onBack: () => void; 
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-8 space-y-6 backdrop-blur-xl shadow-2xl">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Tautan Portfolio (GitHub/Drive)</label>
-                <input 
-                  type="url" required
-                  placeholder="https://..."
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-sm text-zinc-300 focus:outline-none focus:border-[#1ea39e]/50 transition-all placeholder:text-zinc-700"
-                  value={formData.link}
-                  onChange={(e) => setFormData({...formData, link: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Poster Utama</label>
-                <div className="group relative border-2 border-dashed border-white/10 rounded-3xl p-10 text-center space-y-3 hover:border-[#1ea39e]/40 transition-all cursor-pointer bg-white/0.01">
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-zinc-500 group-hover:text-[#1ea39e] transition-colors">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                  </div>
-                  <p className="text-[11px] font-black text-zinc-400 uppercase tracking-tighter">Unggah Thumbnail Karya</p>
-                  <p className="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">PNG / JPG (Maks. 5MB)</p>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] px-1">Poster Utama / Tautan Portfolio</label>
+                <div className="group relative border-2 border-dashed border-white/10 rounded-3xl overflow-hidden text-center hover:border-[#1ea39e]/40 transition-all bg-white/0.01">
+                  
+                  {formData.link && (formData.link.startsWith("data:image") || formData.link.match(/\.(jpeg|jpg|gif|png)$/i)) ? (
+                    <div className="relative w-full aspect-video">
+                      <img src={formData.link} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white text-xs font-bold tracking-widest uppercase">Ubah Foto</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-10 space-y-3">
+                      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-zinc-500 group-hover:text-[#1ea39e] transition-colors">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                      </div>
+                      <p className="text-[11px] font-black text-zinc-400 uppercase tracking-tighter">Unggah Thumbnail Karya</p>
+                      <p className="text-[9px] text-zinc-600 uppercase tracking-widest font-bold">PNG / JPG (Maks. 5MB)</p>
+                    </div>
+                  )}
+                  
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </div>
+                {/* Fallback text input for links if they don't upload an image */}
+                <div className="mt-4 pt-4 border-t border-white/5">
+                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1 block mb-2">Atau masukkan Tautan (Drive/GitHub)</label>
+                  <input 
+                    type="text"
+                    placeholder="https://..."
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3 text-xs text-zinc-300 focus:outline-none focus:border-[#1ea39e]/50 transition-all placeholder:text-zinc-700"
+                    value={formData.link && !formData.link.startsWith("data:image") ? formData.link : ""}
+                    onChange={(e) => setFormData({...formData, link: e.target.value})}
+                  />
                 </div>
               </div>
             </div>
@@ -826,15 +733,9 @@ function DetailView({ project, onBack }: { project: Project; onBack: () => void 
           <div className="space-y-4">
             <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em]">KARYA SEJENIS</h3>
             <div className="space-y-3">
-              {PROJECTS.filter(p => p.id !== project.id).slice(0, 3).map((p) => (
-                <div key={p.id} className="group flex gap-3 p-3 rounded-2xl bg-white/0.02 border border-white/5 hover:bg-white/0.05 transition-all cursor-pointer">
-                  <img src={p.thumbnail} alt={p.title} className="w-16 h-16 rounded-xl object-cover shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black text-zinc-300 uppercase tracking-tight truncate leading-tight group-hover:text-[#1ea39e]">{p.title}</p>
-                    <p className="text-[10px] text-zinc-500 truncate mt-1">{p.author}</p>
-                  </div>
-                </div>
-              ))}
+              <div className="py-10 text-center text-zinc-600 text-[10px] uppercase font-black tracking-widest">
+                Belum ada karya sejenis
+              </div>
             </div>
           </div>
         </div>
@@ -984,8 +885,8 @@ export function MahakaryaView() {
   // Fallback token if not in context (for safety)
   const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("siakad_access_token") || "" : "");
 
-  const displayedProjects = galleryProjects.length > 0 ? galleryProjects : PROJECTS;
-  const featuredProject = galleryProjects.length > 0 ? galleryProjects[0] : FEATURED;
+  const displayedProjects = galleryProjects;
+  const featuredProject = galleryProjects.length > 0 ? galleryProjects[0] : null;
 
   const filtered = displayedProjects.filter((p) => {
     const matchCat = activeCategory === "Semua" || p.category === activeCategory;
@@ -1079,8 +980,14 @@ export function MahakaryaView() {
         <div className="xl:sticky xl:top-8 xl:self-start h-[600px]">
           {isGalleryLoading ? (
             <div className="w-full h-full rounded-3xl bg-white/5 animate-pulse border border-white/10" />
-          ) : (
+          ) : featuredProject ? (
             <FeaturedPanel project={featuredProject} onViewDetails={() => setSelectedProject(featuredProject)} />
+          ) : (
+            <div className="w-full h-full rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center justify-center p-10 text-center">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-600 mb-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              <h3 className="text-sm font-black text-zinc-400 uppercase tracking-widest mb-2">Belum Ada Karya</h3>
+              <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest leading-relaxed">Daftarkan karya inovasi terbaik Anda untuk dipublikasikan di sini.</p>
+            </div>
           )}
         </div>
         <div className="space-y-4">
