@@ -857,11 +857,48 @@ export function MahakaryaView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showRegistration, setShowRegistration] = useState(false);
   const [showDosenApproval, setShowDosenApproval] = useState(false);
+  const [galleryProjects, setGalleryProjects] = useState<Project[]>([]);
+  const [isGalleryLoading, setIsGalleryLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/mahakarya/gallery");
+        const data = await res.json();
+        if (res.ok && data.data) {
+          const mapped = data.data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            author: item.mahasiswa_nama || "Mahasiswa",
+            authorDept: item.mahasiswa_nim || "NIM",
+            authorInitials: (item.mahasiswa_nama || "MH").substring(0, 2).toUpperCase(),
+            authorColor: "bg-[#1ea39e]", // Default color for real data
+            thumbnail: (item.portfolio_url && item.portfolio_url.match(/\.(jpeg|jpg|gif|png)$/i)) 
+                        ? item.portfolio_url 
+                        : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80",
+            description: item.description,
+            fullDescription: item.description,
+            rating: 5,
+          }));
+          setGalleryProjects(mapped);
+        }
+      } catch (err) {
+        console.error("Gagal memuat galeri", err);
+      } finally {
+        setIsGalleryLoading(false);
+      }
+    };
+    fetchGallery();
+  }, []);
 
   // Fallback token if not in context (for safety)
   const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("siakad_access_token") || "" : "");
 
-  const filtered = PROJECTS.filter((p) => {
+  const displayedProjects = galleryProjects.length > 0 ? galleryProjects : PROJECTS;
+  const featuredProject = galleryProjects.length > 0 ? galleryProjects[0] : FEATURED;
+
+  const filtered = displayedProjects.filter((p) => {
     const matchCat = activeCategory === "Semua" || p.category === activeCategory;
     const matchSearch = searchQuery === "" || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.author.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
@@ -938,17 +975,27 @@ export function MahakaryaView() {
       {/* === CONTENT GRID === */}
       <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-8 px-8 pb-10">
         <div className="xl:sticky xl:top-8 xl:self-start h-[600px]">
-          <FeaturedPanel project={FEATURED} onViewDetails={() => setSelectedProject(FEATURED)} />
+          {isGalleryLoading ? (
+            <div className="w-full h-full rounded-3xl bg-white/5 animate-pulse border border-white/10" />
+          ) : (
+            <FeaturedPanel project={featuredProject} onViewDetails={() => setSelectedProject(featuredProject)} />
+          )}
         </div>
         <div className="space-y-4">
           <div className="flex items-center justify-between py-3 px-4 rounded-2xl bg-white/0.03 border border-white/0.06">
             <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Eksplorasi Karya — <span className="text-zinc-300">{filtered.length} ditemukan</span></span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((p) => (
-              <ProjectCard key={p.id} project={p} onClick={() => setSelectedProject(p)} />
-            ))}
-          </div>
+          {isGalleryLoading ? (
+             <div className="py-20 text-center text-zinc-500 uppercase tracking-widest text-xs font-black animate-pulse">Memuat Galeri...</div>
+          ) : filtered.length === 0 ? (
+             <div className="py-20 text-center text-zinc-500 uppercase tracking-widest text-xs font-black">Tidak ada karya ditemukan.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((p) => (
+                <ProjectCard key={p.id} project={p} onClick={() => setSelectedProject(p)} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
