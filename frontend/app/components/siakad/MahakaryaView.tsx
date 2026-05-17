@@ -913,8 +913,8 @@ export function MahakaryaView() {
   return (
     <div className="min-h-screen -m-8 animate-in fade-in duration-500">
       {/* === PAGE HEADER === */}
-      <div className="px-8 pt-8 pb-6">
-        <div className="flex items-center justify-between">
+      <div className="px-4 md:px-8 pt-8 pb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <NavLink
               to="/dashboard"
@@ -934,7 +934,7 @@ export function MahakaryaView() {
               <p className="text-xs text-zinc-500 mt-0.5">Karya Terbaik Mahasiswa UISI</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
             <div className="relative hidden lg:block">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input type="text" placeholder="Cari karya atau mahasiswa..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none w-64" />
@@ -942,24 +942,24 @@ export function MahakaryaView() {
             {user?.role === "dosen" && (
               <button 
                 onClick={() => setShowDosenApproval(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[11px] font-black text-zinc-400 hover:text-[#1ea39e] uppercase tracking-widest transition-all"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[11px] font-black text-zinc-400 hover:text-[#1ea39e] uppercase tracking-widest transition-all whitespace-nowrap shrink-0"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
                 Portal Dosen Wali
               </button>
             )}
             {user?.role === "mahasiswa" && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full lg:w-auto">
                 <button 
                   onClick={() => setShowRiwayat(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-black text-zinc-300 uppercase tracking-widest transition-all"
+                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-black text-zinc-300 uppercase tracking-widest transition-all whitespace-nowrap shrink-0"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                   Cek Revisi
                 </button>
                 <button 
                   onClick={() => setShowRegistration(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
+                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group whitespace-nowrap shrink-0"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:rotate-90"><path d="M12 5v14M5 12h14"/></svg>
                   Daftarkan Karya
