@@ -202,13 +202,14 @@ function CategoryBadge({ label }: { label: string }) {
 // ==========================================
 // REGISTRATION FORM COMPONENT
 // ==========================================
-function RegistrationForm({ onBack, token }: { onBack: () => void; token: string }) {
+function RegistrationForm({ onBack, token, initialData }: { onBack: () => void; token: string; initialData?: any }) {
   const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    description: "",
-    link: "",
+    title: initialData?.title || "",
+    category: initialData?.category || "",
+    description: initialData?.description || "",
+    link: initialData?.portfolio_url || "",
   });
+  const isEditMode = !!initialData;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -216,8 +217,12 @@ function RegistrationForm({ onBack, token }: { onBack: () => void; token: string
     setIsSubmitting(true);
     
     try {
-      const res = await fetch("http://localhost:8080/api/mahakarya/submit", {
-        method: "POST",
+      const url = isEditMode 
+        ? `http://localhost:8080/api/mahakarya/${initialData.id}` 
+        : "http://localhost:8080/api/mahakarya/submit";
+      
+      const res = await fetch(url, {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
@@ -233,7 +238,7 @@ function RegistrationForm({ onBack, token }: { onBack: () => void; token: string
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Gagal mengirim karya");
 
-      alert("Karya berhasil dikirim! Menunggu persetujuan Dosen Wali.");
+      alert(isEditMode ? "Karya berhasil diperbaiki! Menunggu persetujuan ulang Dosen Wali." : "Karya berhasil dikirim! Menunggu persetujuan Dosen Wali.");
       onBack();
     } catch (err: any) {
       alert(err.message);
@@ -250,8 +255,8 @@ function RegistrationForm({ onBack, token }: { onBack: () => void; token: string
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
           </button>
           <div>
-            <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">PENDAFTARAN KARYA</h1>
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Status: <span className="text-amber-500 font-black">Draft</span></p>
+            <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">{isEditMode ? "PERBAIKAN KARYA" : "PENDAFTARAN KARYA"}</h1>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Status: <span className="text-amber-500 font-black">{isEditMode ? "Revisi" : "Draft"}</span></p>
           </div>
         </div>
         
@@ -656,7 +661,7 @@ function MahasiswaRiwayatView({ onBack, token, onEdit }: { onBack: () => void; t
                     </div>
                     {/* For now we just alert, later we can implement onEdit properly */}
                     <button 
-                      onClick={() => alert("Fitur perbaikan karya akan memanggil form edit.")}
+                      onClick={() => onEdit(sub)}
                       className="w-full py-2.5 rounded-xl bg-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all"
                     >
                       Perbaiki Karya
@@ -938,6 +943,7 @@ export function MahakaryaView() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRegistration, setShowRegistration] = useState(false);
+  const [editingSubmission, setEditingSubmission] = useState<any>(null);
   const [showDosenApproval, setShowDosenApproval] = useState(false);
   const [showRiwayat, setShowRiwayat] = useState(false);
   const [galleryProjects, setGalleryProjects] = useState<Project[]>([]);
@@ -992,7 +998,7 @@ export function MahakaryaView() {
   }
 
   if (showRegistration) {
-    return <RegistrationForm onBack={() => setShowRegistration(false)} token={authToken} />;
+    return <RegistrationForm onBack={() => { setShowRegistration(false); setEditingSubmission(null); }} token={authToken} initialData={editingSubmission} />;
   }
 
   if (showDosenApproval && user?.role === "dosen") {
@@ -1000,7 +1006,7 @@ export function MahakaryaView() {
   }
 
   if (showRiwayat && user?.role === "mahasiswa") {
-    return <MahasiswaRiwayatView onBack={() => setShowRiwayat(false)} token={authToken} onEdit={(sub) => console.log(sub)} />;
+    return <MahasiswaRiwayatView onBack={() => setShowRiwayat(false)} token={authToken} onEdit={(sub) => { setShowRiwayat(false); setEditingSubmission(sub); setShowRegistration(true); }} />;
   }
 
   return (
