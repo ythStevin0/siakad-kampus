@@ -593,6 +593,88 @@ function DosenApprovalView({ onBack, token }: { onBack: () => void; token: strin
 }
 
 // ==========================================
+// MAHASISWA RIWAYAT VIEW (CEK REVISI)
+// ==========================================
+function MahasiswaRiwayatView({ onBack, token, onEdit }: { onBack: () => void; token: string; onEdit: (sub: any) => void }) {
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchMySubmissions = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("http://localhost:8080/api/mahakarya/my", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setSubmissions(data.data || []);
+    } catch (err) {
+      console.error("Gagal mengambil riwayat:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMySubmissions();
+  }, []);
+
+  return (
+    <div className="min-h-screen -m-8 p-8 animate-in fade-in duration-500">
+      <div className="flex items-center gap-4 mb-8">
+        <button onClick={onBack} className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-400 hover:text-[#1ea39e] hover:bg-white/10 transition-all">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div>
+          <h1 className="text-xl font-black text-zinc-100 uppercase tracking-widest">RIWAYAT KARYA SAYA</h1>
+          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-0.5">Pantau status persetujuan karya Anda</p>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto space-y-4 pb-20">
+        {isLoading ? (
+          <div className="py-20 text-center text-zinc-500 uppercase text-[10px] font-black tracking-widest animate-pulse">Memuat Riwayat...</div>
+        ) : submissions.length > 0 ? (
+          submissions.map((sub) => (
+            <div key={sub.id} className="relative overflow-hidden rounded-3xl bg-zinc-900/40 border border-white/5 p-7 backdrop-blur-xl shadow-xl">
+              <div className="flex flex-col md:flex-row justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    {sub.status === 'approved' && <span className="px-3 py-1 rounded-full bg-[#1ea39e]/20 text-[#1ea39e] text-[10px] font-black uppercase tracking-widest border border-[#1ea39e]/20">Disetujui</span>}
+                    {sub.status === 'rejected' && <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-500 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">Perlu Revisi</span>}
+                    {sub.status === 'pending' && <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">Menunggu Review</span>}
+                    <span className="text-[10px] font-bold text-zinc-600">{new Date(sub.created_at).toLocaleDateString("id-ID")}</span>
+                  </div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">{sub.title}</h3>
+                  <p className="text-xs text-zinc-400 mt-2 line-clamp-2 max-w-2xl">{sub.description}</p>
+                </div>
+                
+                {sub.status === 'rejected' && (
+                  <div className="md:w-64 shrink-0 space-y-3">
+                    <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Catatan Revisi Dosen:</p>
+                      <p className="text-xs text-zinc-300 font-medium italic">"{sub.rejection_reason}"</p>
+                    </div>
+                    {/* For now we just alert, later we can implement onEdit properly */}
+                    <button 
+                      onClick={() => alert("Fitur perbaikan karya akan memanggil form edit.")}
+                      className="w-full py-2.5 rounded-xl bg-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all"
+                    >
+                      Perbaiki Karya
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-20 text-center text-zinc-500 text-sm font-bold">Anda belum pernah mendaftarkan karya.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // DETAIL VIEW (Full Detailed Layout)
 // ==========================================
 function DetailView({ project, onBack }: { project: Project; onBack: () => void }) {
@@ -857,6 +939,7 @@ export function MahakaryaView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showRegistration, setShowRegistration] = useState(false);
   const [showDosenApproval, setShowDosenApproval] = useState(false);
+  const [showRiwayat, setShowRiwayat] = useState(false);
   const [galleryProjects, setGalleryProjects] = useState<Project[]>([]);
   const [isGalleryLoading, setIsGalleryLoading] = useState(true);
 
@@ -916,6 +999,10 @@ export function MahakaryaView() {
     return <DosenApprovalView onBack={() => setShowDosenApproval(false)} token={authToken} />;
   }
 
+  if (showRiwayat && user?.role === "mahasiswa") {
+    return <MahasiswaRiwayatView onBack={() => setShowRiwayat(false)} token={authToken} onEdit={(sub) => console.log(sub)} />;
+  }
+
   return (
     <div className="min-h-screen -m-8 animate-in fade-in duration-500">
       {/* === PAGE HEADER === */}
@@ -955,13 +1042,22 @@ export function MahakaryaView() {
               </button>
             )}
             {user?.role === "mahasiswa" && (
-              <button 
-                onClick={() => setShowRegistration(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:rotate-90"><path d="M12 5v14M5 12h14"/></svg>
-                Daftarkan Karya
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setShowRiwayat(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-black text-zinc-300 uppercase tracking-widest transition-all"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                  Cek Revisi
+                </button>
+                <button 
+                  onClick={() => setShowRegistration(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1ea39e] hover:bg-[#17888a] text-[11px] font-black text-white uppercase tracking-widest shadow-lg shadow-[#1ea39e]/20 transition-all group"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:rotate-90"><path d="M12 5v14M5 12h14"/></svg>
+                  Daftarkan Karya
+                </button>
+              </div>
             )}
           </div>
         </div>
